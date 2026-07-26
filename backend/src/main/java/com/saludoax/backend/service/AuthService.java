@@ -3,10 +3,12 @@ package com.saludoax.backend.service;
 import com.saludoax.backend.dto.AuthResponse;
 import com.saludoax.backend.dto.LoginRequest;
 import com.saludoax.backend.dto.RegisterRequest;
+import com.saludoax.backend.model.Paciente;
 import com.saludoax.backend.model.PasswordResetToken;
 import com.saludoax.backend.model.Rol;
 import com.saludoax.backend.model.TokenBlacklist;
 import com.saludoax.backend.model.Usuario;
+import com.saludoax.backend.repository.PacienteRepository;
 import com.saludoax.backend.repository.PasswordResetTokenRepository;
 import com.saludoax.backend.repository.RolRepository;
 import com.saludoax.backend.repository.TokenBlacklistRepository;
@@ -43,6 +45,7 @@ public class AuthService {
 
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
+    private final PacienteRepository pacienteRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
@@ -52,6 +55,7 @@ public class AuthService {
 
     public AuthService(UsuarioRepository usuarioRepository,
                        RolRepository rolRepository,
+                       PacienteRepository pacienteRepository,
                        PasswordEncoder passwordEncoder,
                        AuthenticationManager authenticationManager,
                        JwtUtil jwtUtil,
@@ -59,6 +63,7 @@ public class AuthService {
                        PasswordResetTokenRepository passwordResetTokenRepository) {
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
+        this.pacienteRepository = pacienteRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
@@ -66,6 +71,7 @@ public class AuthService {
         this.passwordResetTokenRepository = passwordResetTokenRepository;
     }
 
+    @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (usuarioRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Ya existe un usuario con ese email");
@@ -79,11 +85,20 @@ public class AuthService {
         usuario.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         usuario.setPasswordChangedAt(LocalDateTime.now());
         usuario.setRol(rol);
-
         usuarioRepository.save(usuario);
+
+        Paciente paciente = new Paciente();
+        paciente.setUsuario(usuario);
+        paciente.setNombre(deriveNombreDeEmail(request.getEmail()));
+        pacienteRepository.save(paciente);
 
         String token = jwtUtil.generateToken(usuario.getEmail(), rol.getNombre());
         return new AuthResponse(token, usuario.getEmail(), rol.getNombre());
+    }
+
+    private String deriveNombreDeEmail(String email) {
+        int at = email.indexOf('@');
+        return at > 0 ? email.substring(0, at) : email;
     }
 
     public AuthResponse login(LoginRequest request) {
