@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthService {
 
+    private static final String ROL_AUTOREGISTRO = "PACIENTE";
+
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
@@ -23,10 +25,10 @@ public class AuthService {
     private final JwtUtil jwtUtil;
 
     public AuthService(UsuarioRepository usuarioRepository,
-                        RolRepository rolRepository,
-                        PasswordEncoder passwordEncoder,
-                        AuthenticationManager authenticationManager,
-                        JwtUtil jwtUtil) {
+                       RolRepository rolRepository,
+                       PasswordEncoder passwordEncoder,
+                       AuthenticationManager authenticationManager,
+                       JwtUtil jwtUtil) {
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
         this.passwordEncoder = passwordEncoder;
@@ -39,8 +41,8 @@ public class AuthService {
             throw new IllegalArgumentException("Ya existe un usuario con ese email");
         }
 
-        Rol rol = rolRepository.findByNombre(request.getRol().toUpperCase())
-                .orElseThrow(() -> new IllegalArgumentException("Rol invalido: " + request.getRol()));
+        Rol rol = rolRepository.findByNombre(ROL_AUTOREGISTRO)
+                .orElseThrow(() -> new IllegalStateException("El rol " + ROL_AUTOREGISTRO + " no existe en la base de datos"));
 
         Usuario usuario = new Usuario();
         usuario.setEmail(request.getEmail());

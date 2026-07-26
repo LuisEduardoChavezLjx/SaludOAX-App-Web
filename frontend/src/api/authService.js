@@ -7,8 +7,8 @@ export async function login(email, password) {
   return data
 }
 
-export async function register(email, password, rol) {
-  const { data } = await axiosClient.post('/auth/register', { email, password, rol })
+export async function register(email, password) {
+  const { data } = await axiosClient.post('/auth/register', { email, password })
   localStorage.setItem('saludoax_token', data.token)
   localStorage.setItem('saludoax_user', JSON.stringify({ email: data.email, rol: data.rol }))
   return data

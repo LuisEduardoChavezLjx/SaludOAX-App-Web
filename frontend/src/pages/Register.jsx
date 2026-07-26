@@ -4,78 +4,71 @@ import { useAuth } from '../context/AuthContext'
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}$/
 
 export default function Register() {
-  const { register } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [rol, setRol] = useState('PACIENTE')
-  const [errors, setErrors] = useState({})
-  const [serverError, setServerError] = useState('')
-  const [loading, setLoading] = useState(false)
+    const { register } = useAuth()
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
+    const [errors, setErrors] = useState({})
+    const [serverError, setServerError] = useState('')
+    const [loading, setLoading] = useState(false)
 
-  const validate = () => {
-    const newErrors = {}
-    if (!email) newErrors.email = 'El email es obligatorio'
-    else if (!/^\S+@\S+\.\S+$/.test(email)) newErrors.email = 'Formato de email invalido'
+    const validate = () => {
+        const newErrors = {}
+        if (!email) newErrors.email = 'El email es obligatorio'
+        else if (!/^\S+@\S+\.\S+$/.test(email)) newErrors.email = 'Formato de email invalido'
 
-    if (!password) newErrors.password = 'La contrasena es obligatoria'
-    else if (!PASSWORD_REGEX.test(password))
-      newErrors.password = 'Debe tener 8+ caracteres, una mayuscula, un numero y un caracter especial'
+        if (!password) newErrors.password = 'La contrasena es obligatoria'
+        else if (!PASSWORD_REGEX.test(password))
+            newErrors.password = 'Debe tener 8+ caracteres, una mayuscula, un numero y un caracter especial'
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setServerError('')
-    if (!validate()) return
-
-    setLoading(true)
-    try {
-      await register(email, password, rol)
-      window.location.href = '/'
-    } catch (err) {
-      setServerError(
-        err.response?.data?.mensaje || 'No se pudo completar el registro. Intenta de nuevo.'
-      )
-    } finally {
-      setLoading(false)
+        setErrors(newErrors)
+        return Object.keys(newErrors).length === 0
     }
-  }
 
-  return (
-    <form onSubmit={handleSubmit} noValidate>
-      <h1>Crear cuenta</h1>
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        setServerError('')
+        if (!validate()) return
 
-      <label htmlFor="email">Correo electronico</label>
-      <input
-        id="email"
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      {errors.email && <p role="alert">{errors.email}</p>}
+        setLoading(true)
+        try {
+            await register(email, password)
+            window.location.href = '/'
+        } catch (err) {
+            setServerError(
+                err.response?.data?.mensaje || 'No se pudo completar el registro. Intenta de nuevo.'
+            )
+        } finally {
+            setLoading(false)
+        }
+    }
 
-      <label htmlFor="password">Contrasena</label>
-      <input
-        id="password"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      {errors.password && <p role="alert">{errors.password}</p>}
+    return (
+        <form onSubmit={handleSubmit} noValidate>
+            <h1>Crear cuenta</h1>
 
-      <label htmlFor="rol">Tipo de cuenta</label>
-      <select id="rol" value={rol} onChange={(e) => setRol(e.target.value)}>
-        <option value="PACIENTE">Paciente</option>
-        <option value="MEDICO">Medico</option>
-      </select>
+            <label htmlFor="email">Correo electronico</label>
+            <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+            />
+            {errors.email && <p role="alert">{errors.email}</p>}
 
-      {serverError && <p role="alert">{serverError}</p>}
+            <label htmlFor="password">Contrasena</label>
+            <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+            />
+            {errors.password && <p role="alert">{errors.password}</p>}
 
-      <button type="submit" disabled={loading}>
-        {loading ? 'Creando cuenta...' : 'Registrarme'}
-      </button>
-    </form>
-  )
+            {serverError && <p role="alert">{serverError}</p>}
+
+            <button type="submit" disabled={loading}>
+                {loading ? 'Creando cuenta...' : 'Registrarme'}
+            </button>
+        </form>
+    )
 }
