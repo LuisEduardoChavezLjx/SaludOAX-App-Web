@@ -56,8 +56,9 @@ public class CitaService {
         cita.setPaciente(paciente);
         cita.setMedico(medico);
         cita.setFechaHora(dto.getFechaHora());
-        cita.setPeso(dto.getPeso());
-        cita.setPresion(dto.getPresion());
+        cita.setPesoKg(dto.getPesoKg());
+        cita.setPresionSistolica(dto.getPresionSistolica());
+        cita.setPresionDiastolica(dto.getPresionDiastolica());
         cita.setContextoSalud(dto.getContextoSalud());
         cita.setEstado(EstadoCita.PENDIENTE);
 
@@ -92,8 +93,9 @@ public class CitaService {
                 c.getMedico().getId(),
                 c.getFechaHora(),
                 c.getEstado().name(),
-                c.getPeso(),
-                c.getPresion(),
+                c.getPesoKg(),
+                c.getPresionSistolica(),
+                c.getPresionDiastolica(),
                 c.getContextoSalud()
         );
     }

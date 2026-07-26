@@ -26,11 +26,14 @@ public class Cita {
     @Column(nullable = false, length = 20)
     private EstadoCita estado = EstadoCita.PENDIENTE;
 
-    @Column(length = 20)
-    private String peso;
+    @Column(name = "peso_kg", precision = 5, scale = 2)
+    private java.math.BigDecimal pesoKg;
 
-    @Column(length = 20)
-    private String presion;
+    @Column(name = "presion_sistolica")
+    private Integer presionSistolica;
+
+    @Column(name = "presion_diastolica")
+    private Integer presionDiastolica;
 
     @Column(name = "contexto_salud", length = 500)
     private String contextoSalud;
@@ -55,11 +58,14 @@ public class Cita {
     public EstadoCita getEstado() { return estado; }
     public void setEstado(EstadoCita estado) { this.estado = estado; }
 
-    public String getPeso() { return peso; }
-    public void setPeso(String peso) { this.peso = peso; }
+    public java.math.BigDecimal getPesoKg() { return pesoKg; }
+    public void setPesoKg(java.math.BigDecimal pesoKg) { this.pesoKg = pesoKg; }
 
-    public String getPresion() { return presion; }
-    public void setPresion(String presion) { this.presion = presion; }
+    public Integer getPresionSistolica() { return presionSistolica; }
+    public void setPresionSistolica(Integer presionSistolica) { this.presionSistolica = presionSistolica; }
+
+    public Integer getPresionDiastolica() { return presionDiastolica; }
+    public void setPresionDiastolica(Integer presionDiastolica) { this.presionDiastolica = presionDiastolica; }
 
     public String getContextoSalud() { return contextoSalud; }
     public void setContextoSalud(String contextoSalud) { this.contextoSalud = contextoSalud; }

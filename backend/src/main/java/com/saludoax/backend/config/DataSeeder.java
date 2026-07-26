@@ -18,6 +18,22 @@ import java.util.List;
 @Component
 public class DataSeeder implements CommandLineRunner {
 
+    private static final int[] SISTOLICAS_SEED = {118, 122, 145, 130, 185, 110, 128, 152, 120, 138};
+    private static final int[] DIASTOLICAS_SEED = {76, 80, 92, 84, 125, 70, 82, 95, 78, 88};
+    private static final int[] EDADES_SEED = {34, 67, 45, 4, 72, 28, 51, 63, 39, 6};
+    private static final String[] CONTEXTOS_SEED = {
+            "Consulta de rutina, sin molestias",
+            "Dolor de rodilla al caminar desde hace dos semanas",
+            "Dolor de cabeza persistente y vision borrosa",
+            "Fiebre y tos desde hace tres dias",
+            "Mareo intenso, zumbido en oidos y dolor en el pecho",
+            "Revision anual de control",
+            "Molestia estomacal despues de comer",
+            "Falta de aire al subir escaleras",
+            "Erupcion en la piel del antebrazo",
+            "Control de crecimiento y vacunas"
+    };
+
     private final RolRepository rolRepository;
     private final UsuarioRepository usuarioRepository;
     private final PacienteRepository pacienteRepository;
@@ -27,9 +43,9 @@ public class DataSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
 
     public DataSeeder(RolRepository rolRepository, UsuarioRepository usuarioRepository,
-                       PacienteRepository pacienteRepository, MedicoRepository medicoRepository,
-                       EspecialidadRepository especialidadRepository, CitaRepository citaRepository,
-                       PasswordEncoder passwordEncoder) {
+                      PacienteRepository pacienteRepository, MedicoRepository medicoRepository,
+                      EspecialidadRepository especialidadRepository, CitaRepository citaRepository,
+                      PasswordEncoder passwordEncoder) {
         this.rolRepository = rolRepository;
         this.usuarioRepository = usuarioRepository;
         this.pacienteRepository = pacienteRepository;
@@ -60,9 +76,12 @@ public class DataSeeder implements CommandLineRunner {
                 p.setUsuario(u);
                 p.setNombre("Paciente de prueba " + i);
                 p.setTelefono("951000000" + i);
-                p.setPeso((60 + i) + "kg");
-                p.setPresion("120/80");
-                p.setContextoSalud("Consulta de rutina numero " + i);
+                p.setPesoKg(new java.math.BigDecimal(60 + i));
+                p.setPresionSistolica(SISTOLICAS_SEED[i - 1]);
+                p.setPresionDiastolica(DIASTOLICAS_SEED[i - 1]);
+                p.setFechaNacimiento(java.time.LocalDate.now().minusYears(EDADES_SEED[i - 1]));
+                p.setSexo(i % 2 == 0 ? "FEMENINO" : "MASCULINO");
+                p.setContextoSalud(CONTEXTOS_SEED[i - 1]);
                 pacienteRepository.save(p);
             }
         }
@@ -72,8 +91,8 @@ public class DataSeeder implements CommandLineRunner {
 
         // 5 medicos de prueba, cada uno con una especialidad asignada por N:M
         String[] nombresMedicos = {
-            "Dra. Ana Gomez", "Dr. Luis Ramirez", "Dra. Carmen Ruiz",
-            "Dr. Jorge Diaz", "Dra. Sofia Torres"
+                "Dra. Ana Gomez", "Dr. Luis Ramirez", "Dra. Carmen Ruiz",
+                "Dr. Jorge Diaz", "Dra. Sofia Torres"
         };
         for (int i = 0; i < nombresMedicos.length; i++) {
             Usuario u = crearUsuarioSiNoExiste("medico" + (i + 1) + "@saludoax.com", "Medico123!", rolMedico);
@@ -98,9 +117,11 @@ public class DataSeeder implements CommandLineRunner {
             c.setMedico(medicos.get(i % medicos.size()));
             c.setFechaHora(LocalDateTime.now().plusDays(1).plusHours(i));
             c.setEstado(EstadoCita.PENDIENTE);
-            c.setPeso(pacientes.get(i % pacientes.size()).getPeso());
-            c.setPresion(pacientes.get(i % pacientes.size()).getPresion());
-            c.setContextoSalud(pacientes.get(i % pacientes.size()).getContextoSalud());
+            Paciente pacienteDeLaCita = pacientes.get(i % pacientes.size());
+            c.setPesoKg(pacienteDeLaCita.getPesoKg());
+            c.setPresionSistolica(pacienteDeLaCita.getPresionSistolica());
+            c.setPresionDiastolica(pacienteDeLaCita.getPresionDiastolica());
+            c.setContextoSalud(pacienteDeLaCita.getContextoSalud());
             citaRepository.save(c);
         }
     }
