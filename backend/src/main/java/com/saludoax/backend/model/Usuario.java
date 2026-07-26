@@ -20,7 +20,7 @@ public class Usuario {
     @Column(name = "password_changed_at", nullable = false)
     private LocalDateTime passwordChangedAt = LocalDateTime.now();
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "rol_id", nullable = false)
     private Rol rol;
 
