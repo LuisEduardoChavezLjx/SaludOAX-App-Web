@@ -1,7 +1,7 @@
 ALTER TABLE pacientes
     ADD COLUMN peso_kg DECIMAL(5,2) NULL AFTER telefono,
-    ADD COLUMN presion_sistolica SMALLINT NULL AFTER peso_kg,
-    ADD COLUMN presion_diastolica SMALLINT NULL AFTER presion_sistolica,
+    ADD COLUMN presion_sistolica INT NULL AFTER peso_kg,
+    ADD COLUMN presion_diastolica INT NULL AFTER presion_sistolica,
     ADD COLUMN fecha_nacimiento DATE NULL AFTER presion_diastolica,
     ADD COLUMN sexo VARCHAR(20) NULL AFTER fecha_nacimiento;
 
@@ -26,8 +26,8 @@ ALTER TABLE pacientes
 
 ALTER TABLE citas
     ADD COLUMN peso_kg DECIMAL(5,2) NULL AFTER estado,
-    ADD COLUMN presion_sistolica SMALLINT NULL AFTER peso_kg,
-    ADD COLUMN presion_diastolica SMALLINT NULL AFTER presion_sistolica;
+    ADD COLUMN presion_sistolica INT NULL AFTER peso_kg,
+    ADD COLUMN presion_diastolica INT NULL AFTER presion_sistolica;
 
 UPDATE citas
 SET peso_kg = CAST(REGEXP_REPLACE(peso, '[^0-9.]', '') AS DECIMAL(5,2))
