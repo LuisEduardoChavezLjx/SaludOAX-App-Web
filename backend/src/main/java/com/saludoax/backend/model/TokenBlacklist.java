@@ -14,7 +14,7 @@ public class TokenBlacklist {
     @Column(name = "usuario_id", nullable = false)
     private Long usuarioId;
 
-    @Column(name = "token_jti", nullable = false, unique = true, length = 36)
+    @Column(name = "token_jti", nullable = false, unique = true, columnDefinition = "CHAR(36)")
     private String tokenJti;
 
     @Column(name = "fecha_expiracion", nullable = false)

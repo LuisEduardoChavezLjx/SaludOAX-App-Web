@@ -14,7 +14,7 @@ public class PasswordResetToken {
     @Column(name = "usuario_id", nullable = false)
     private Long usuarioId;
 
-    @Column(name = "token_hash", nullable = false, unique = true, length = 64)
+    @Column(name = "token_hash", nullable = false, unique = true, columnDefinition = "CHAR(64)")
     private String tokenHash;
 
     @Column(name = "expira_en", nullable = false)
