@@ -1,0 +1,72 @@
+package com.saludoax.backend.controller;
+
+import com.saludoax.backend.dto.CitaDTO;
+import com.saludoax.backend.dto.PageResponse;
+import com.saludoax.backend.service.CitaService;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/citas")
+public class CitaController {
+
+    private final CitaService citaService;
+
+    public CitaController(CitaService citaService) {
+        this.citaService = citaService;
+    }
+
+    // GET /api/citas?page=0&size=10&estado=PENDIENTE
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MEDICO')")
+    public ResponseEntity<PageResponse<CitaDTO>> listar(
+            @RequestParam(required = false) String estado,
+            Pageable pageable) {
+        return ResponseEntity.ok(new PageResponse<>(citaService.listar(estado, pageable)));
+    }
+
+    @GetMapping("/paciente/{pacienteId}")
+    @PreAuthorize("hasAnyRole('ADMIN','PACIENTE')")
+    public ResponseEntity<PageResponse<CitaDTO>> listarPorPaciente(
+            @PathVariable Long pacienteId, Pageable pageable) {
+        return ResponseEntity.ok(new PageResponse<>(citaService.listarPorPaciente(pacienteId, pageable)));
+    }
+
+    @GetMapping("/medico/{medicoId}")
+    @PreAuthorize("hasAnyRole('ADMIN','MEDICO')")
+    public ResponseEntity<PageResponse<CitaDTO>> listarPorMedico(
+            @PathVariable Long medicoId, Pageable pageable) {
+        return ResponseEntity.ok(new PageResponse<>(citaService.listarPorMedico(medicoId, pageable)));
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MEDICO','PACIENTE')")
+    public ResponseEntity<CitaDTO> obtener(@PathVariable Long id) {
+        return ResponseEntity.ok(citaService.obtener(id));
+    }
+
+    @PostMapping
+    @PreAuthorize("hasAnyRole('PACIENTE','ADMIN')")
+    public ResponseEntity<CitaDTO> crear(@Valid @RequestBody CitaDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(citaService.crear(dto));
+    }
+
+    @PatchMapping("/{id}/estado")
+    @PreAuthorize("hasAnyRole('ADMIN','MEDICO','PACIENTE')")
+    public ResponseEntity<CitaDTO> cambiarEstado(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        return ResponseEntity.ok(citaService.cambiarEstado(id, body.get("estado")));
+    }
+
+    // Consumido por el Flujo B para mostrar tiempo estimado de espera
+    @GetMapping("/{id}/posicion-fila")
+    @PreAuthorize("hasAnyRole('ADMIN','MEDICO','PACIENTE')")
+    public ResponseEntity<Map<String, Integer>> posicionEnFila(@PathVariable Long id) {
+        return ResponseEntity.ok(Map.of("posicion", citaService.posicionEnFila(id)));
+    }
+}
