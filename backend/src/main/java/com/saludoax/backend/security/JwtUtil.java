@@ -11,6 +11,7 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Component
 public class JwtUtil {
@@ -34,6 +35,7 @@ public class JwtUtil {
 
         return Jwts.builder()
                 .claims(claims)
+                .id(UUID.randomUUID().toString())
                 .subject(email)
                 .issuedAt(now)
                 .expiration(expiry)
@@ -47,6 +49,18 @@ public class JwtUtil {
 
     public String extractRol(String token) {
         return (String) extractClaims(token).get("rol");
+    }
+
+    public String extractJti(String token) {
+        return extractClaims(token).getId();
+    }
+
+    public Date extractIssuedAt(String token) {
+        return extractClaims(token).getIssuedAt();
+    }
+
+    public Date extractExpiration(String token) {
+        return extractClaims(token).getExpiration();
     }
 
     public boolean isTokenValid(String token, String email) {
