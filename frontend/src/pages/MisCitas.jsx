@@ -15,8 +15,8 @@ export default function MisCitas() {
   // 1. Obtener el perfil del paciente autenticado
   useEffect(() => {
     obtenerMiPerfil()
-      .then((perfil) => setPacienteId(perfil.id))
-      .catch(() => setError('No se pudo cargar tu perfil de paciente.'))
+        .then((perfil) => setPacienteId(perfil.id))
+        .catch(() => setError('No se pudo cargar tu perfil de paciente.'))
   }, [])
 
   // 2. Cargar citas cuando ya tenemos el pacienteId
@@ -57,42 +57,42 @@ export default function MisCitas() {
   if (!data) return null
 
   return (
-    <div>
-      <h1>Mis citas</h1>
-
-      {data.contenido.length === 0 && <p>No tienes citas registradas.</p>}
-
-      <ul>
-        {data.contenido.map((cita) => (
-          <li key={cita.id}>
-            {new Date(cita.fechaHora).toLocaleString()} — {cita.estado}
-            {cita.estado === 'PENDIENTE' && (
-              <button type="button" onClick={() => setCitaACancelar(cita)}>
-                Cancelar
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
-
       <div>
-        <button disabled={pagina === 0} onClick={() => setPagina((p) => p - 1)}>
-          Anterior
-        </button>
-        <span> Pagina {data.paginaActual + 1} de {data.totalPaginas || 1} </span>
-        <button disabled={pagina + 1 >= data.totalPaginas} onClick={() => setPagina((p) => p + 1)}>
-          Siguiente
-        </button>
-      </div>
+        <h1>Mis citas</h1>
 
-      <ConfirmModal
-        open={!!citaACancelar}
-        title="Cancelar cita"
-        message={`Estas por cancelar tu cita del ${citaACancelar ? new Date(citaACancelar.fechaHora).toLocaleString() : ''}. Esta accion no se puede deshacer.`}
-        onConfirm={confirmarCancelacion}
-        onCancel={() => setCitaACancelar(null)}
-        loading={cancelando}
-      />
-    </div>
+        {data.contenido.length === 0 && <p>No tienes citas registradas.</p>}
+
+        <ul>
+          {data.contenido.map((cita) => (
+              <li key={cita.id}>
+                {new Date(cita.fechaHora).toLocaleString()} — {cita.estado}
+                {cita.estado === 'PENDIENTE' && (
+                    <button type="button" onClick={() => setCitaACancelar(cita)}>
+                      Cancelar
+                    </button>
+                )}
+              </li>
+          ))}
+        </ul>
+
+        <div>
+          <button disabled={pagina === 0} onClick={() => setPagina((p) => p - 1)}>
+            Anterior
+          </button>
+          <span> Pagina {data.paginaActual + 1} de {data.totalPaginas || 1} </span>
+          <button disabled={pagina + 1 >= data.totalPaginas} onClick={() => setPagina((p) => p + 1)}>
+            Siguiente
+          </button>
+        </div>
+
+        <ConfirmModal
+            open={!!citaACancelar}
+            title="Cancelar cita"
+            message={`Estas por cancelar tu cita del ${citaACancelar ? new Date(citaACancelar.fechaHora).toLocaleString() : ''}. Esta accion no se puede deshacer.`}
+            onConfirm={confirmarCancelacion}
+            onCancel={() => setCitaACancelar(null)}
+            loading={cancelando}
+        />
+      </div>
   )
 }
