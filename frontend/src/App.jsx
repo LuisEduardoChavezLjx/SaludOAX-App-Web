@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -9,35 +9,47 @@ import MisCitas from './pages/MisCitas'
 import AgendarCita from './pages/AgendarCita'
 import AdminUsuarios from './paginas/AdminUsuarios'
 import AdminMedicos from './paginas/AdminMedicos'
+import { Navbar } from './componentes/comunes/Navbar'
 
-function Home() {
-  const { user, logout } = useAuth()
+function PrivateRoute({ children, allowedRoles }) {
+  const { user, cargando } = useAuth()
+
+  if (cargando) return null
+
+  if (!user) return <Navigate to="/login" replace />
+  if (allowedRoles && !allowedRoles.includes(user.rol)) return <Navigate to="/" replace />
+
+  return children
+}
+
+function AuthLayout() {
+  const { user } = useAuth()
+  if (!user) return <Outlet />
+
   return (
-    <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
-      <div className="max-w-md w-full card shadow-sm text-center">
-        <h1 className="text-2xl font-bold text-brand-800 mb-4">SaludOAX</h1>
-        {user ? (
-          <div className="space-y-4">
-            <p className="text-sm text-muted">Sesión iniciada como: <span className="font-semibold text-ink">{user.email}</span> (<span className="font-medium">{user.rol}</span>)</p>
-            <button onClick={logout} className="btn-secondary w-full">
-              Cerrar sesión
-            </button>
-          </div>
-        ) : (
-          <p className="text-sm text-muted">No has iniciado sesión.</p>
-        )}
-      </div>
+    <div className="min-h-screen bg-canvas flex flex-col">
+      <Navbar />
+      <main className="flex-1">
+        <Outlet />
+      </main>
     </div>
   )
 }
 
-function PrivateRoute({ children, allowedRoles }) {
+function PublicLayout() {
+  return <Outlet />
+}
+
+function HomeRedirect() {
   const { user } = useAuth()
   if (!user) return <Navigate to="/login" replace />
-  if (allowedRoles && !allowedRoles.includes(user.rol)) {
-    return <Navigate to="/" replace />
+
+  const redirectMap = {
+    ADMIN: '/admin/usuarios',
+    MEDICO: '/medico/agenda',
+    PACIENTE: '/mis-citas',
   }
-  return children
+  return <Navigate to={redirectMap[user.rol] || '/'} replace />
 }
 
 export default function App() {
@@ -45,58 +57,25 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/recuperar" element={<RecuperarPassword />} />
-          <Route path="/restablecer/:token" element={<RestablecerPassword />} />
-          <Route
-            path="/"
-            element={
-              <PrivateRoute>
-                <Home />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/salud"
-            element={
-              <PrivateRoute allowedRoles={['PACIENTE']}>
-                <RegistroSalud />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/mis-citas"
-            element={
-              <PrivateRoute allowedRoles={['PACIENTE']}>
-                <MisCitas />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/agendar-cita"
-            element={
-              <PrivateRoute allowedRoles={['PACIENTE']}>
-                <AgendarCita />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/admin/usuarios"
-            element={
-              <PrivateRoute allowedRoles={['ADMIN']}>
-                <AdminUsuarios />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/admin/medicos"
-            element={
-              <PrivateRoute allowedRoles={['ADMIN']}>
-                <AdminMedicos />
-              </PrivateRoute>
-            }
-          />
+          <Route element={<PublicLayout />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/recuperar" element={<RecuperarPassword />} />
+            <Route path="/restablecer/:token" element={<RestablecerPassword />} />
+          </Route>
+
+          <Route element={<AuthLayout />}>
+            <Route path="/" element={<HomeRedirect />} />
+            <Route path="/salud" element={<PrivateRoute allowedRoles={['PACIENTE']}><RegistroSalud /></PrivateRoute>} />
+            <Route path="/mis-citas" element={<PrivateRoute allowedRoles={['PACIENTE']}><MisCitas /></PrivateRoute>} />
+            <Route path="/agendar-cita" element={<PrivateRoute allowedRoles={['PACIENTE']}><AgendarCita /></PrivateRoute>} />
+            <Route path="/admin/usuarios" element={<PrivateRoute allowedRoles={['ADMIN']}><AdminUsuarios /></PrivateRoute>} />
+            <Route path="/admin/medicos" element={<PrivateRoute allowedRoles={['ADMIN']}><AdminMedicos /></PrivateRoute>} />
+            {/* TODO: Rutas MEDICO cuando existan
+            <Route path="/medico/agenda" element={<PrivateRoute allowedRoles={['MEDICO']}><AgendaMedico /></PrivateRoute>} />
+            <Route path="/medico/sala-espera" element={<PrivateRoute allowedRoles={['MEDICO']}><SalaEspera /></PrivateRoute>} />
+            */}
+          </Route>
         </Routes>
       </BrowserRouter>
     </AuthProvider>
