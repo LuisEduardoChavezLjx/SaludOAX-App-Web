@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import axiosClient from '../../api/axiosClient';
-import { useAuth } from '../../context/AuthContext';
-import { SidebarAdmin } from '../comunes/SidebarAdmin';
-import { HeaderAdmin } from '../comunes/HeaderAdmin';
-import { ModalNuevoMedico } from '../admin/ModalNuevoMedico';
+import axiosClient from '../api/axiosClient';
+import { useAuth } from '../context/AuthContext';
+import { SidebarAdmin } from '../componentes/comunes/SidebarAdmin';
+import { HeaderAdmin } from '../componentes/comunes/HeaderAdmin';
+import { ModalNuevoMedico } from '../componentes/admin/ModalNuevoMedico';
 
 const TAMANO_PAGINA = 10;
 const DIAS = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'];

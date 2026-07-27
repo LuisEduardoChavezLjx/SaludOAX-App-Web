@@ -7,6 +7,8 @@ import RestablecerPassword from './pages/RestablecerPassword'
 import RegistroSalud from './pages/RegistroSalud'
 import MisCitas from './pages/MisCitas'
 import AgendarCita from './pages/AgendarCita'
+import AdminUsuarios from './paginas/AdminUsuarios'
+import AdminMedicos from './paginas/AdminMedicos'
 
 function Home() {
   const { user, logout } = useAuth()
@@ -76,6 +78,22 @@ export default function App() {
             element={
               <PrivateRoute allowedRoles={['PACIENTE']}>
                 <AgendarCita />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/usuarios"
+            element={
+              <PrivateRoute allowedRoles={['ADMIN']}>
+                <AdminUsuarios />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/medicos"
+            element={
+              <PrivateRoute allowedRoles={['ADMIN']}>
+                <AdminMedicos />
               </PrivateRoute>
             }
           />
