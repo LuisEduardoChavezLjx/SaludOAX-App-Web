@@ -2,6 +2,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import RegistroSalud from './pages/RegistroSalud'
+import MisCitas from './pages/MisCitas'
+import AgendarCita from './pages/AgendarCita'
 
 function Home() {
   const { user, logout } = useAuth()
@@ -20,9 +23,13 @@ function Home() {
   )
 }
 
-function PrivateRoute({ children }) {
+function PrivateRoute({ children, allowedRoles }) {
   const { user } = useAuth()
-  return user ? children : <Navigate to="/login" replace />
+  if (!user) return <Navigate to="/login" replace />
+  if (allowedRoles && !allowedRoles.includes(user.rol)) {
+    return <Navigate to="/" replace />
+  }
+  return children
 }
 
 export default function App() {
@@ -37,6 +44,30 @@ export default function App() {
             element={
               <PrivateRoute>
                 <Home />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/salud"
+            element={
+              <PrivateRoute allowedRoles={['PACIENTE']}>
+                <RegistroSalud />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/mis-citas"
+            element={
+              <PrivateRoute allowedRoles={['PACIENTE']}>
+                <MisCitas />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/agendar-cita"
+            element={
+              <PrivateRoute allowedRoles={['PACIENTE']}>
+                <AgendarCita />
               </PrivateRoute>
             }
           />

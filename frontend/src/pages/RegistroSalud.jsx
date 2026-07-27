@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { crearPerfilPaciente } from '../api/pacienteService'
+import { useState, useEffect } from 'react'
+import { crearPerfilPaciente, obtenerMiPerfil, actualizarPerfilPaciente } from '../api/pacienteService'
 
 const RANGOS = {
     pesoKg: { min: 1, max: 400, etiqueta: 'El peso debe estar entre 1 y 400 kg' },
@@ -21,10 +21,38 @@ export default function RegistroSalud() {
     const [errors, setErrors] = useState({})
     const [serverError, setServerError] = useState('')
     const [success, setSuccess] = useState(false)
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(true)
+    const [submitting, setSubmitting] = useState(false)
+    const [editando, setEditando] = useState(false)
+    const [perfilId, setPerfilId] = useState(null)
+
+    // Al montar, intentamos cargar el perfil existente
+    useEffect(() => {
+        obtenerMiPerfil()
+            .then((perfil) => {
+                setEditando(true)
+                setPerfilId(perfil.id)
+                setForm({
+                    nombre: perfil.nombre || '',
+                    telefono: perfil.telefono || '',
+                    fechaNacimiento: perfil.fechaNacimiento || '',
+                    sexo: perfil.sexo || '',
+                    pesoKg: perfil.pesoKg != null ? String(perfil.pesoKg) : '',
+                    presionSistolica: perfil.presionSistolica != null ? String(perfil.presionSistolica) : '',
+                    presionDiastolica: perfil.presionDiastolica != null ? String(perfil.presionDiastolica) : '',
+                    contextoSalud: perfil.contextoSalud || '',
+                })
+            })
+            .catch(() => {
+                // No hay perfil aún, modo crear
+                setEditando(false)
+            })
+            .finally(() => setLoading(false))
+    }, [])
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value })
+        if (errors[e.target.name]) setErrors((e) => ({ ...e, [e.target.name]: '' }))
     }
 
     const validarRango = (campo, valor, newErrors) => {
@@ -65,9 +93,9 @@ export default function RegistroSalud() {
         setSuccess(false)
         if (!validate()) return
 
-        setLoading(true)
+        setSubmitting(true)
         try {
-            await crearPerfilPaciente({
+            const payload = {
                 nombre: form.nombre,
                 telefono: form.telefono || null,
                 fechaNacimiento: form.fechaNacimiento || null,
@@ -76,18 +104,26 @@ export default function RegistroSalud() {
                 presionSistolica: form.presionSistolica === '' ? null : Number(form.presionSistolica),
                 presionDiastolica: form.presionDiastolica === '' ? null : Number(form.presionDiastolica),
                 contextoSalud: form.contextoSalud,
-            })
+            }
+
+            if (editando && perfilId) {
+                await actualizarPerfilPaciente(perfilId, payload)
+            } else {
+                await crearPerfilPaciente(payload)
+            }
             setSuccess(true)
         } catch (err) {
             setServerError(err.response?.data?.mensaje || 'No se pudo guardar la informacion.')
         } finally {
-            setLoading(false)
+            setSubmitting(false)
         }
     }
 
+    if (loading) return <p>Cargando...</p>
+
     return (
         <form onSubmit={handleSubmit} noValidate>
-            <h1>Datos de salud</h1>
+            <h1>{editando ? 'Editar datos de salud' : 'Datos de salud'}</h1>
 
             <label htmlFor="nombre">Nombre completo</label>
             <input id="nombre" name="nombre" value={form.nombre} onChange={handleChange} />
@@ -161,8 +197,8 @@ export default function RegistroSalud() {
             {serverError && <p role="alert">{serverError}</p>}
             {success && <p>Informacion guardada correctamente.</p>}
 
-            <button type="submit" disabled={loading}>
-                {loading ? 'Guardando...' : 'Guardar'}
+            <button type="submit" disabled={submitting}>
+                {submitting ? 'Guardando...' : (editando ? 'Actualizar' : 'Guardar')}
             </button>
         </form>
     )

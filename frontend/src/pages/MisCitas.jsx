@@ -1,15 +1,29 @@
 import { useEffect, useState } from 'react'
 import { listarCitasPorPaciente, cambiarEstadoCita } from '../api/citaService'
+import { obtenerMiPerfil } from '../api/pacienteService'
 import ConfirmModal from '../components/ConfirmModal'
 
-// pacienteId vendria del perfil del usuario autenticado; se recibe como prop
-export default function MisCitas({ pacienteId }) {
+export default function MisCitas() {
   const [pagina, setPagina] = useState(0)
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [citaACancelar, setCitaACancelar] = useState(null)
   const [cancelando, setCancelando] = useState(false)
+  const [pacienteId, setPacienteId] = useState(null)
+
+  // 1. Obtener el perfil del paciente autenticado
+  useEffect(() => {
+    obtenerMiPerfil()
+      .then((perfil) => setPacienteId(perfil.id))
+      .catch(() => setError('No se pudo cargar tu perfil de paciente.'))
+  }, [])
+
+  // 2. Cargar citas cuando ya tenemos el pacienteId
+  useEffect(() => {
+    if (!pacienteId) return
+    cargar(pagina)
+  }, [pacienteId, pagina])
 
   const cargar = async (page) => {
     setLoading(true)
@@ -24,11 +38,6 @@ export default function MisCitas({ pacienteId }) {
     }
   }
 
-  useEffect(() => {
-    cargar(pagina)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagina])
-
   const confirmarCancelacion = async () => {
     setCancelando(true)
     try {
@@ -42,7 +51,8 @@ export default function MisCitas({ pacienteId }) {
     }
   }
 
-  if (loading) return <p>Cargando citas...</p>
+  if (loading && !pacienteId) return <p>Cargando perfil...</p>
+  if (loading && pacienteId) return <p>Cargando citas...</p>
   if (error) return <p role="alert">{error}</p>
   if (!data) return null
 

@@ -2,6 +2,8 @@ package com.saludoax.backend.controller;
 
 import com.saludoax.backend.dto.PacienteDTO;
 import com.saludoax.backend.dto.PageResponse;
+import com.saludoax.backend.model.Usuario;
+import com.saludoax.backend.repository.UsuarioRepository;
 import com.saludoax.backend.service.PacienteService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
@@ -16,9 +18,11 @@ import org.springframework.web.bind.annotation.*;
 public class PacienteController {
 
     private final PacienteService pacienteService;
+    private final UsuarioRepository usuarioRepository;
 
-    public PacienteController(PacienteService pacienteService) {
+    public PacienteController(PacienteService pacienteService, UsuarioRepository usuarioRepository) {
         this.pacienteService = pacienteService;
+        this.usuarioRepository = usuarioRepository;
     }
 
     // Paginacion y filtro reales del lado del servidor:
@@ -35,6 +39,14 @@ public class PacienteController {
     @PreAuthorize("hasAnyRole('ADMIN','MEDICO','PACIENTE')")
     public ResponseEntity<PacienteDTO> obtener(@PathVariable Long id) {
         return ResponseEntity.ok(pacienteService.obtener(id));
+    }
+
+    @GetMapping("/mi-perfil")
+    @PreAuthorize("hasRole('PACIENTE')")
+    public ResponseEntity<PacienteDTO> miPerfil(Authentication auth) {
+        Usuario usuario = usuarioRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        return ResponseEntity.ok(pacienteService.buscarPorUsuarioId(usuario.getId()));
     }
 
     @PostMapping

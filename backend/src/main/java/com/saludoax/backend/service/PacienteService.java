@@ -76,6 +76,12 @@ public class PacienteService {
         paciente.setContextoSalud(dto.getContextoSalud());
     }
 
+    public PacienteDTO buscarPorUsuarioId(Long usuarioId) {
+        Paciente paciente = pacienteRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new IllegalArgumentException("Perfil de paciente no encontrado"));
+        return toDTO(paciente);
+    }
+
     private PacienteDTO toDTO(Paciente p) {
         return new PacienteDTO(p.getId(), p.getNombre(), p.getTelefono(), p.getPesoKg(),
                 p.getPresionSistolica(), p.getPresionDiastolica(),
