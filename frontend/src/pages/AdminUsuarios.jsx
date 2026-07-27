@@ -4,7 +4,7 @@ import Pagination from '../components/Pagination'
 import LoadingSpinner from '../components/LoadingSpinner'
 import EmptyState from '../components/EmptyState'
 import ConfirmModal from '../components/ConfirmModal'
-import { listarUsuarios, crearUsuario, cambiarEstadoUsuario } from '../api/usuarioService'
+import { listarUsuarios, crearUsuario, cambiarEstadoUsuario } from '../api/usuariosService'
 import { Search, UserPlus, Shield, Users } from 'lucide-react'
 
 const ROL_COLORS = {
