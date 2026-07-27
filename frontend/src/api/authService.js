@@ -14,16 +14,22 @@ export async function login(email, password) {
   }
 }
 
-export async function register(email, password, rol) {
-  const { data } = await axiosClient.post('/auth/register', { email, password, rol })
+export async function register(email, password) {
+  const { data } = await axiosClient.post('/auth/register', { email, password })
   localStorage.setItem('saludoax_token', data.token)
   localStorage.setItem('saludoax_user', JSON.stringify({ email: data.email, rol: data.rol }))
   return data
 }
 
-export function logout() {
-  localStorage.removeItem('saludoax_token')
-  localStorage.removeItem('saludoax_user')
+export async function logout() {
+  try {
+    await axiosClient.post('/auth/logout')
+  } catch {
+    // Si el backend no responde, igual cerramos sesion localmente
+  } finally {
+    localStorage.removeItem('saludoax_token')
+    localStorage.removeItem('saludoax_user')
+  }
 }
 
 export function getCurrentUser() {

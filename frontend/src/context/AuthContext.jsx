@@ -18,13 +18,13 @@ export function AuthProvider({ children }) {
     return data
   }
 
-  const handleLogout = () => {
-    authService.logout()
+  const handleLogout = async () => {
+    await authService.logout()
     setUser(null)
   }
 
   return (
-      <AuthContext.Provider value={{ user, login: handleLogin, register: handleRegister, logout: handleLogout }}>
+      <AuthContext.Provider value={{ user, estaAutenticado: !!user, login: handleLogin, register: handleRegister, logout: handleLogout }}>
         {children}
       </AuthContext.Provider>
   )
