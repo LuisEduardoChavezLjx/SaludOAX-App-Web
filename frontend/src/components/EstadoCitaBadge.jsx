@@ -17,9 +17,9 @@ export default function EstadoCitaBadge({ estado }) {
   const label = ETIQUETAS[estado] || estado
 
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-line bg-subtle px-2.5 py-1 text-xs font-semibold text-ink">
+      <span className="inline-flex items-center gap-2 rounded-full border border-line bg-subtle px-2.5 py-1 text-xs font-semibold text-ink">
       <span className={`w-1.5 h-1.5 rounded-full ${punto}`} />
-      {label}
+        {label}
     </span>
   )
 }
