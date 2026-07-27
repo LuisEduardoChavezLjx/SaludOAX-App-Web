@@ -30,3 +30,12 @@ export function getCurrentUser() {
   const raw = localStorage.getItem('saludoax_user')
   return raw ? JSON.parse(raw) : null
 }
+
+export async function recuperarPassword(email) {
+  await axiosClient.post('/auth/recuperar', { email })
+}
+
+export async function restablecerPassword(token, nuevaPassword) {
+  const { data } = await axiosClient.post('/auth/restablecer', { token, nuevaPassword })
+  return data
+}
