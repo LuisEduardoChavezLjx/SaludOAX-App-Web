@@ -9,6 +9,8 @@ import MisCitas from './pages/MisCitas'
 import AgendarCita from './pages/AgendarCita'
 import AdminUsuarios from './paginas/AdminUsuarios'
 import AdminMedicos from './paginas/AdminMedicos'
+import AgendaMedico from './pages/AgendaMedico'
+import SalaEspera from './pages/SalaEspera'
 import AgendaMedico from './paginas/AgendaMedico'
 import SalaEspera from './paginas/SalaEspera'
 import { Navbar } from './componentes/comunes/Navbar'
@@ -27,15 +29,7 @@ function PrivateRoute({ children, allowedRoles }) {
 function AuthLayout() {
   const { user } = useAuth()
   if (!user) return <Outlet />
-
-  return (
-    <div className="min-h-screen bg-canvas flex flex-col">
-      <Navbar />
-      <main className="flex-1">
-        <Outlet />
-      </main>
-    </div>
-  )
+  return <Outlet />
 }
 
 function PublicLayout() {
