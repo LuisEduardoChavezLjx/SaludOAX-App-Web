@@ -11,9 +11,6 @@ import AdminUsuarios from './paginas/AdminUsuarios'
 import AdminMedicos from './paginas/AdminMedicos'
 import AgendaMedico from './pages/AgendaMedico'
 import SalaEspera from './pages/SalaEspera'
-import AgendaMedico from './paginas/AgendaMedico'
-import SalaEspera from './paginas/SalaEspera'
-import { Navbar } from './componentes/comunes/Navbar'
 
 function PrivateRoute({ children, allowedRoles }) {
   const { user, cargando } = useAuth()
