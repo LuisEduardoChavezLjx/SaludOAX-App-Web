@@ -1,70 +1,159 @@
 import { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
+import { validarFormularioAcceso, tieneErrores } from '../utilidades/validaciones'
+import { MensajeError } from '../componentes/comunes/MensajeError'
+import { NOMBRE_CLINICA, RUTA_ILUSTRACION_ACCESO } from '../utilidades/constantes'
 
 export default function Login() {
-  const { login } = useAuth()
+  const { login, estaAutenticado } = useAuth()
+  const navigate = useNavigate()
+
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [errors, setErrors] = useState({})
-  const [serverError, setServerError] = useState('')
-  const [loading, setLoading] = useState(false)
-
-  const validate = () => {
-    const newErrors = {}
-    if (!email) newErrors.email = 'El email es obligatorio'
-    else if (!/^\S+@\S+\.\S+$/.test(email)) newErrors.email = 'Formato de email invalido'
-
-    if (!password) newErrors.password = 'La contrasena es obligatoria'
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+  const [contrasena, setContrasena] = useState('')
+  const [mostrarContrasena, setMostrarContrasena] = useState(false)
+  const [errores, setErrores] = useState({})
+  const [errorServidor, setErrorServidor] = useState('')
+  const [cargando, setCargando] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setServerError('')
-    if (!validate()) return
+    setErrorServidor('')
 
-    setLoading(true)
+    const erroresValidacion = validarFormularioAcceso({ email, contrasena })
+    setErrores(erroresValidacion)
+
+    if (tieneErrores(erroresValidacion)) return
+
+    setCargando(true)
     try {
-      await login(email, password)
-      window.location.href = '/'
+      await login(email.trim(), contrasena)
+      navigate('/')
     } catch (err) {
-      setServerError(
-        err.response?.data?.mensaje || 'No se pudo iniciar sesion. Intenta de nuevo.'
-      )
+      setErrorServidor(err.message || 'No se pudo iniciar sesion. Intenta de nuevo.')
     } finally {
-      setLoading(false)
+      setCargando(false)
     }
   }
 
+  const handleBlurEmail = () => {
+    const err = validarFormularioAcceso({ email, contrasena: '' })
+    setErrores((prev) => ({ ...prev, email: err.email || undefined }))
+  }
+
+  const handleBlurContrasena = () => {
+    const err = validarFormularioAcceso({ email: '', contrasena })
+    setErrores((prev) => ({ ...prev, contrasena: err.contrasena || undefined }))
+  }
+
+  if (estaAutenticado) {
+    return null
+  }
+
   return (
-    <form onSubmit={handleSubmit} noValidate>
-      <h1>Iniciar sesion</h1>
+    <div className="min-h-screen flex">
+      <aside className="hidden lg:flex lg:w-1/2 items-center justify-center p-10 bg-crema-oscuro relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--color-salvia)_0%,_transparent_70%)] opacity-30" />
+        <img
+          src={RUTA_ILUSTRACION_ACCESO}
+          alt={`${NOMBRE_CLINICA} - Acceso`}
+          className="relative max-w-md h-auto drop-shadow-2xl"
+        />
+      </aside>
 
-      <label htmlFor="email">Correo electronico</label>
-      <input
-        id="email"
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      {errors.email && <p role="alert">{errors.email}</p>}
+      <main className="flex-1 flex items-center justify-center p-6 lg:p-12">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-texto">{NOMBRE_CLINICA}</h1>
+            <p className="mt-2 text-texto-suave">Inicia sesion para continuar</p>
+          </div>
 
-      <label htmlFor="password">Contrasena</label>
-      <input
-        id="password"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      {errors.password && <p role="alert">{errors.password}</p>}
+          <div className="superficie p-8">
+            <form onSubmit={handleSubmit} noValidate>
+              <MensajeError mensaje={errorServidor} />
 
-      {serverError && <p role="alert">{serverError}</p>}
+              <div className="mb-5">
+                <label htmlFor="email" className="block text-sm font-medium text-texto mb-1.5">
+                  Correo electronico
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-texto-suave" />
+                  <input
+                    id="email"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onBlur={handleBlurEmail}
+                    className="campo-hundido w-full pl-10 pr-4 py-3 text-texto placeholder-texto-suave border-none focus:outline-none focus:ring-2 focus:ring-verde"
+                    placeholder="nombre@correo.com"
+                    disabled={cargando}
+                    aria-invalid={!!errores.email}
+                    aria-describedby={errores.email ? 'email-error' : undefined}
+                  />
+                </div>
+                {errores.email && (
+                  <p id="email-error" className="mt-1.5 text-sm text-peligro" role="alert">
+                    {errores.email}
+                  </p>
+                )}
+              </div>
 
-      <button type="submit" disabled={loading}>
-        {loading ? 'Ingresando...' : 'Ingresar'}
-      </button>
-    </form>
+              <div className="mb-6">
+                <label htmlFor="contrasena" className="block text-sm font-medium text-texto mb-1.5">
+                  Contrasena
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-texto-suave" />
+                  <input
+                    id="contrasena"
+                    type={mostrarContrasena ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    value={contrasena}
+                    onChange={(e) => setContrasena(e.target.value)}
+                    onBlur={handleBlurContrasena}
+                    className="campo-hundido w-full pl-10 pr-12 py-3 text-texto placeholder-texto-suave border-none focus:outline-none focus:ring-2 focus:ring-verde"
+                    placeholder="********"
+                    disabled={cargando}
+                    aria-invalid={!!errores.contrasena}
+                    aria-describedby={errores.contrasena ? 'contrasena-error' : undefined}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setMostrarContrasena(!mostrarContrasena)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-texto-suave hover:text-texto transition-colors"
+                    aria-label={mostrarContrasena ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+                    aria-pressed={mostrarContrasena}
+                  >
+                    {mostrarContrasena ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+                {errores.contrasena && (
+                  <p id="contrasena-error" className="mt-1.5 text-sm text-peligro" role="alert">
+                    {errores.contrasena}
+                  </p>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={cargando}
+                className="boton-primario w-full py-3.5 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {cargando ? 'Ingresando...' : 'Iniciar sesion'}
+              </button>
+            </form>
+
+            <p className="mt-6 text-center text-sm text-texto-suave">
+              No tienes cuenta?{' '}
+              <Link to="/register" className="font-medium text-verde hover:text-verde-oscuro underline underline-offset-2">
+                Registrate
+              </Link>
+            </p>
+          </div>
+        </div>
+      </main>
+    </div>
   )
 }
