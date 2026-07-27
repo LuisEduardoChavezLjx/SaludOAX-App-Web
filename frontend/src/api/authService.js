@@ -32,7 +32,23 @@ export async function logout() {
   }
 }
 
+function tokenExpirado() {
+  const token = localStorage.getItem('saludoax_token')
+  if (!token) return true
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.exp * 1000 < Date.now()
+  } catch {
+    return true
+  }
+}
+
 export function getCurrentUser() {
+  if (tokenExpirado()) {
+    localStorage.removeItem('saludoax_token')
+    localStorage.removeItem('saludoax_user')
+    return null
+  }
   const raw = localStorage.getItem('saludoax_user')
   return raw ? JSON.parse(raw) : null
 }

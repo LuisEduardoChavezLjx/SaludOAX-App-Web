@@ -1,23 +1,37 @@
 package com.saludoax.backend.service;
 
 import com.saludoax.backend.dto.PacienteDTO;
+import com.saludoax.backend.dto.TurnoResponseDTO;
+import com.saludoax.backend.dto.UltimosVitalesDTO;
+import com.saludoax.backend.model.Cita;
+import com.saludoax.backend.model.EstadoCita;
 import com.saludoax.backend.model.Paciente;
 import com.saludoax.backend.model.Usuario;
+import com.saludoax.backend.repository.CitaRepository;
 import com.saludoax.backend.repository.PacienteRepository;
 import com.saludoax.backend.repository.UsuarioRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Locale;
 
 @Service
 public class PacienteService {
 
     private final PacienteRepository pacienteRepository;
     private final UsuarioRepository usuarioRepository;
+    private final CitaRepository citaRepository;
 
-    public PacienteService(PacienteRepository pacienteRepository, UsuarioRepository usuarioRepository) {
+    public PacienteService(PacienteRepository pacienteRepository, UsuarioRepository usuarioRepository,
+                           CitaRepository citaRepository) {
         this.pacienteRepository = pacienteRepository;
         this.usuarioRepository = usuarioRepository;
+        this.citaRepository = citaRepository;
     }
 
     public Page<PacienteDTO> listar(String nombre, Pageable pageable) {
@@ -80,6 +94,57 @@ public class PacienteService {
         Paciente paciente = pacienteRepository.findByUsuarioId(usuarioId)
                 .orElseThrow(() -> new IllegalArgumentException("Perfil de paciente no encontrado"));
         return toDTO(paciente);
+    }
+
+    @Transactional(readOnly = true)
+    public TurnoResponseDTO obtenerMiTurno(Long usuarioId) {
+        Paciente paciente = pacienteRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new IllegalArgumentException("Perfil de paciente no encontrado"));
+
+        List<EstadoCita> activos = List.of(EstadoCita.PENDIENTE, EstadoCita.CONFIRMADA);
+        Cita cita = citaRepository
+                .findFirstByPacienteIdAndEstadoInOrderByFechaHoraAsc(paciente.getId(), activos)
+                .orElseThrow(() -> new IllegalArgumentException("No tienes citas pendientes"));
+
+        int posicion = citaRepository.findCitasAntesEnFila(cita.getMedico().getId(), cita.getFechaHora()).size();
+        int minutosEstimados = (posicion + 1) * 15;
+
+        String horaFormateada = cita.getFechaHora()
+                .format(DateTimeFormatter.ofPattern("h:mm a", new Locale("es", "MX")));
+
+        return new TurnoResponseDTO(
+                posicion + 1,
+                minutosEstimados,
+                cita.getMedico().getNombre(),
+                cita.getMedico().getEspecialidad(),
+                horaFormateada,
+                cita.getMedico().getConsultorio(),
+                "PENDIENTE"
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public UltimosVitalesDTO obtenerUltimosVitales(Long usuarioId) {
+        Paciente paciente = pacienteRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new IllegalArgumentException("Perfil de paciente no encontrado"));
+
+        List<EstadoCita> atendidas = List.of(EstadoCita.ATENDIDA, EstadoCita.PENDIENTE, EstadoCita.CONFIRMADA);
+        Cita ultimaCita = citaRepository
+                .findFirstByPacienteIdAndEstadoInOrderByFechaHoraDesc(paciente.getId(), atendidas)
+                .orElse(null);
+
+        if (ultimaCita == null) {
+            return new UltimosVitalesDTO(null, null, null, null, null, null);
+        }
+
+        return new UltimosVitalesDTO(
+                ultimaCita.getPesoKg(),
+                ultimaCita.getPresionSistolica(),
+                ultimaCita.getPresionDiastolica(),
+                ultimaCita.getContextoSalud(),
+                ultimaCita.getFechaHora(),
+                ultimaCita.getMedico().getNombre()
+        );
     }
 
     private PacienteDTO toDTO(Paciente p) {

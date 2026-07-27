@@ -19,3 +19,8 @@ export async function actualizarPerfilPaciente(id, datos) {
   const { data } = await axiosClient.put(`/pacientes/${id}`, datos)
   return data
 }
+
+export async function obtenerUltimosVitales() {
+  const { data } = await axiosClient.get('/pacientes/ultimos-vitales')
+  return data
+}
