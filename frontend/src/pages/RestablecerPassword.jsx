@@ -1,51 +1,45 @@
 import { useState } from 'react';
-import { Navigate, useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import axiosClient from '../api/axiosClient';
 import { LogoMarca } from '../componentes/comunes/LogoMarca';
 
-const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const REGLAS_PASSWORD = [
   { texto: 'Mínimo 8 caracteres', test: (p) => p.length >= 8 },
-  { texto: 'Una letra mayúscula', test: (p) => /[A-Z]/.test(p) },
-  { texto: 'Un número', test: (p) => /[0-9]/.test(p) },
-  { texto: 'Un carácter especial (por ejemplo ! # $ %)', test: (p) => /[^A-Za-z0-9]/.test(p) },
+  { texto: 'Una mayúscula, un número y un carácter especial', test: (p) => /[A-Z]/.test(p) && /[0-9]/.test(p) && /[^A-Za-z0-9]/.test(p) },
 ];
 
-export default function Register() {
-  const { user, cargando, register } = useAuth();
+export default function RestablecerPassword() {
+  const { token } = useParams();
   const navegar = useNavigate();
 
-  const [email, setEmail] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [confirmar, setConfirmar] = useState('');
-  const [errorGeneral, setErrorGeneral] = useState('');
   const [errorConfirmar, setErrorConfirmar] = useState('');
-
-  if (user) return <Navigate to="/" replace />;
+  const [errorGeneral, setErrorGeneral] = useState('');
+  const [cargando, setCargando] = useState(false);
 
   async function manejarEnvio(evento) {
     evento.preventDefault();
-    setErrorGeneral('');
     setErrorConfirmar('');
+    setErrorGeneral('');
 
-    if (!REGEX_EMAIL.test(email.trim())) {
-      setErrorGeneral('Correo inválido.');
-      return;
-    }
-    if (!REGLAS_PASSWORD.every((regla) => regla.test(contrasena))) {
+    if (!REGLAS_PASSWORD.every((r) => r.test(contrasena))) {
       setErrorGeneral('La contraseña no cumple los requisitos.');
       return;
     }
     if (contrasena !== confirmar) {
-      setErrorConfirmar('Las contraseñas no coinciden.');
+      setErrorConfirmar('Las contraseñas no coinciden. Escríbalas de nuevo.');
       return;
     }
 
+    setCargando(true);
     try {
-      await register(email.trim(), contrasena, 'PACIENTE');
-      navegar('/', { replace: true });
+      await axiosClient.post('/auth/restablecer-password', { token, nuevaPassword: contrasena });
+      navegar('/login', { replace: true });
     } catch (error) {
-      setErrorGeneral(error.message);
+      setErrorGeneral(error.response?.data?.mensaje || 'El enlace expiró o no es válido.');
+    } finally {
+      setCargando(false);
     }
   }
 
@@ -57,25 +51,15 @@ export default function Register() {
           <span className="mt-3 text-base font-semibold tracking-tight text-brand-800">SaludOAX</span>
         </div>
 
-        <h1 className="mt-6 text-xl font-semibold tracking-[-0.01em] text-center">Crear cuenta</h1>
-        <p className="mt-1.5 text-sm text-muted text-center">El registro público crea siempre una cuenta de paciente.</p>
+        <h1 className="mt-6 text-xl font-semibold tracking-[-0.01em] text-center">Restablecer contraseña</h1>
+        <p className="mt-1.5 text-sm text-muted text-center">
+          Escriba su nueva contraseña. Debe ser distinta a la anterior.
+        </p>
 
         <form onSubmit={manejarEnvio} className="mt-8 space-y-5" noValidate>
           <div>
-            <label htmlFor="email" className="label">
-              Correo electrónico
-            </label>
-            <input
-              id="email" type="email" placeholder="nombre@correo.com" autoComplete="email"
-              value={email} onChange={(e) => setEmail(e.target.value)}
-              className="input-field"
-            />
-            <p className="mt-2 text-xs text-muted">Será su identificador de acceso.</p>
-          </div>
-
-          <div>
             <label htmlFor="password" className="label">
-              Contraseña
+              Nueva contraseña
             </label>
             <input
               id="password" type="password" autoComplete="new-password"
@@ -109,14 +93,13 @@ export default function Register() {
           {errorGeneral && <p className="text-xs text-urgente font-medium" role="alert">{errorGeneral}</p>}
 
           <button type="submit" disabled={cargando} className="btn-primary">
-            {cargando ? 'Creando cuenta...' : 'Crear cuenta'}
+            {cargando ? 'Restableciendo...' : 'Restablecer contraseña'}
           </button>
         </form>
 
-        <p className="mt-8 text-sm text-muted text-center">
-          ¿Ya tiene cuenta?{' '}
+        <p className="mt-6 text-sm text-muted text-center">
           <Link to="/login" className="font-semibold text-brand-700 hover:text-brand-800 underline underline-offset-2">
-            Iniciar sesión
+            Volver a iniciar sesión
           </Link>
         </p>
       </div>

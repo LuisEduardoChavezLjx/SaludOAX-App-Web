@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import RecuperarPassword from './pages/RecuperarPassword'
+import RestablecerPassword from './pages/RestablecerPassword'
 import RegistroSalud from './pages/RegistroSalud'
 import MisCitas from './pages/MisCitas'
 import AgendarCita from './pages/AgendarCita'
@@ -9,16 +11,20 @@ import AgendarCita from './pages/AgendarCita'
 function Home() {
   const { user, logout } = useAuth()
   return (
-    <div>
-      <h1>saludOax</h1>
-      {user ? (
-        <div>
-          <p>Sesion iniciada como: {user.email} ({user.rol})</p>
-          <button onClick={logout}>Cerrar sesion</button>
-        </div>
-      ) : (
-        <p>No has iniciado sesion.</p>
-      )}
+    <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
+      <div className="max-w-md w-full card shadow-sm text-center">
+        <h1 className="text-2xl font-bold text-brand-800 mb-4">SaludOAX</h1>
+        {user ? (
+          <div className="space-y-4">
+            <p className="text-sm text-muted">Sesión iniciada como: <span className="font-semibold text-ink">{user.email}</span> (<span className="font-medium">{user.rol}</span>)</p>
+            <button onClick={logout} className="btn-secondary w-full">
+              Cerrar sesión
+            </button>
+          </div>
+        ) : (
+          <p className="text-sm text-muted">No has iniciado sesión.</p>
+        )}
+      </div>
     </div>
   )
 }
@@ -39,6 +45,8 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/recuperar" element={<RecuperarPassword />} />
+          <Route path="/restablecer/:token" element={<RestablecerPassword />} />
           <Route
             path="/"
             element={
