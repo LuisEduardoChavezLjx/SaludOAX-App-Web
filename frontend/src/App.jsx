@@ -9,6 +9,8 @@ import MisCitas from './pages/MisCitas'
 import AgendarCita from './pages/AgendarCita'
 import AdminUsuarios from './paginas/AdminUsuarios'
 import AdminMedicos from './paginas/AdminMedicos'
+import AgendaMedico from './paginas/AgendaMedico'
+import SalaEspera from './paginas/SalaEspera'
 import { Navbar } from './componentes/comunes/Navbar'
 
 function PrivateRoute({ children, allowedRoles }) {
@@ -71,10 +73,8 @@ export default function App() {
             <Route path="/agendar-cita" element={<PrivateRoute allowedRoles={['PACIENTE']}><AgendarCita /></PrivateRoute>} />
             <Route path="/admin/usuarios" element={<PrivateRoute allowedRoles={['ADMIN']}><AdminUsuarios /></PrivateRoute>} />
             <Route path="/admin/medicos" element={<PrivateRoute allowedRoles={['ADMIN']}><AdminMedicos /></PrivateRoute>} />
-            {/* TODO: Rutas MEDICO cuando existan
             <Route path="/medico/agenda" element={<PrivateRoute allowedRoles={['MEDICO']}><AgendaMedico /></PrivateRoute>} />
             <Route path="/medico/sala-espera" element={<PrivateRoute allowedRoles={['MEDICO']}><SalaEspera /></PrivateRoute>} />
-            */}
           </Route>
         </Routes>
       </BrowserRouter>
