@@ -80,8 +80,11 @@ public class AuthService {
         Rol rol = rolRepository.findByNombre(ROL_AUTOREGISTRO)
                 .orElseThrow(() -> new IllegalStateException("El rol " + ROL_AUTOREGISTRO + " no existe en la base de datos"));
 
+        String nombre = deriveNombreDeEmail(request.getEmail());
+
         Usuario usuario = new Usuario();
         usuario.setEmail(request.getEmail());
+        usuario.setNombre(nombre);
         usuario.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         usuario.setPasswordChangedAt(LocalDateTime.now());
         usuario.setRol(rol);
@@ -89,7 +92,7 @@ public class AuthService {
 
         Paciente paciente = new Paciente();
         paciente.setUsuario(usuario);
-        paciente.setNombre(deriveNombreDeEmail(request.getEmail()));
+        paciente.setNombre(nombre);
         pacienteRepository.save(paciente);
 
         String token = jwtUtil.generateToken(usuario.getEmail(), rol.getNombre());

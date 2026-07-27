@@ -27,6 +27,10 @@
   box-sizing: border-box;
 }
 
+html {
+  font-family: var(--font-sans);
+}
+
 body {
   margin: 0;
   font-family: var(--font-sans);
@@ -38,4 +42,61 @@ body {
 
 input, select, textarea, button {
   font-family: inherit;
+}
+
+@layer components {
+  .btn-primary {
+    @apply w-full rounded-lg bg-brand-700 py-3 text-sm font-semibold text-white shadow-sm transition-colors duration-150 hover:bg-brand-800 active:bg-brand-900 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply flex items-center justify-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm font-semibold text-muted hover:bg-subtle hover:text-ink transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2;
+  }
+
+  .btn-danger {
+    @apply flex items-center justify-center gap-2 rounded-lg border border-urgente px-3 py-2 text-sm font-semibold text-urgente hover:bg-urgente/10 hover:border-urgente transition-colors duration-150;
+  }
+
+  .input-field {
+    @apply w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink focus:border-brand-700 focus:ring-2 focus:ring-brand-700 focus:outline-none placeholder:text-muted/60 disabled:bg-subtle disabled:cursor-not-allowed;
+  }
+
+  .label {
+    @apply block text-xs font-semibold uppercase tracking-[0.06em] text-ink mb-2;
+  }
+
+  .card {
+    @apply bg-surface border border-line rounded-2xl p-6 md:p-8;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+
+  .badge-leve { @apply bg-leve/10 text-leve; }
+  .badge-moderada { @apply bg-moderada/10 text-moderada; }
+  .badge-urgente { @apply bg-urgente/10 text-urgente; }
+  .badge-info { @apply bg-info/10 text-info; }
+  .badge-neutro { @apply bg-neutro/10 text-neutro; }
+  .badge-success { @apply bg-green-100 text-green-700; }
+  .badge-warning { @apply bg-yellow-100 text-yellow-700; }
+  .badge-gray { @apply bg-gray-100 text-gray-700; }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: var(--color-line);
+    border-radius: 3px;
+  }
 }

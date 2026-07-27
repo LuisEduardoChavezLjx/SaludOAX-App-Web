@@ -1,30 +1,41 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useCallback } from 'react'
 import * as authService from '../api/authService'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(authService.getCurrentUser())
+  const [cargando, setCargando] = useState(false)
 
-  const handleLogin = async (email, password) => {
-    const data = await authService.login(email, password)
-    setUser({ email: data.email, rol: data.rol })
-    return data
-  }
+  const handleLogin = useCallback(async (email, password) => {
+    setCargando(true)
+    try {
+      const data = await authService.login(email, password)
+      setUser({ email: data.email, rol: data.rol })
+      return data
+    } finally {
+      setCargando(false)
+    }
+  }, [])
 
-  const handleRegister = async (email, password) => {
-    const data = await authService.register(email, password)
-    setUser({ email: data.email, rol: data.rol })
-    return data
-  }
+  const handleRegister = useCallback(async (email, password) => {
+    setCargando(true)
+    try {
+      const data = await authService.register(email, password)
+      setUser({ email: data.email, rol: data.rol })
+      return data
+    } finally {
+      setCargando(false)
+    }
+  }, [])
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     await authService.logout()
     setUser(null)
-  }
+  }, [])
 
   return (
-      <AuthContext.Provider value={{ user, estaAutenticado: !!user, login: handleLogin, register: handleRegister, logout: handleLogout }}>
+      <AuthContext.Provider value={{ user, cargando, estaAutenticado: !!user, login: handleLogin, register: handleRegister, logout: handleLogout }}>
         {children}
       </AuthContext.Provider>
   )
