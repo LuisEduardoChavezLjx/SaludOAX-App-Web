@@ -28,7 +28,7 @@ export default function Register() {
 
     setCargando(true)
     try {
-      await register(email.trim(), contrasena, 'PACIENTE')
+      await register(email.trim(), contrasena)
       navigate('/salud')
     } catch (err) {
       setErrorServidor(err.message || 'No se pudo crear la cuenta. Intenta de nuevo.')
