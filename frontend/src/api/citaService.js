@@ -12,8 +12,20 @@ export async function listarCitasPorPaciente(pacienteId, page = 0, size = 10) {
   return data
 }
 
+export async function listarCitasPorMedico(medicoId, page = 0, size = 10) {
+  const { data } = await axiosClient.get(`/citas/medico/${medicoId}`, {
+    params: { page, size },
+  })
+  return data
+}
+
 export async function cambiarEstadoCita(citaId, estado) {
   const { data } = await axiosClient.patch(`/citas/${citaId}/estado`, { estado })
+  return data
+}
+
+export async function actualizarVitalesCita(citaId, vitales) {
+  const { data } = await axiosClient.patch(`/citas/${citaId}/vitales`, vitales)
   return data
 }
 

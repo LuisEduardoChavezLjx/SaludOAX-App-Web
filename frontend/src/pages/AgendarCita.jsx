@@ -80,37 +80,37 @@ export default function AgendarCita() {
   if (serverError && !form.medicoId && !form.fechaHora) return <p role="alert">{serverError}</p>
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
-      <h1>Agendar cita</h1>
+      <form onSubmit={handleSubmit} noValidate>
+        <h1>Agendar cita</h1>
 
-      <label htmlFor="medicoId">Medico</label>
-      <select id="medicoId" name="medicoId" value={form.medicoId} onChange={handleChange} required>
-        <option value="">-- Selecciona un medico --</option>
-        {medicos.map((m) => (
-          <option key={m.id} value={m.id}>
-            {m.nombre} ({m.especialidad})
-          </option>
-        ))}
-      </select>
-      {errors.medicoId && <p role="alert">{errors.medicoId}</p>}
+        <label htmlFor="medicoId">Medico</label>
+        <select id="medicoId" name="medicoId" value={form.medicoId} onChange={handleChange} required>
+          <option value="">-- Selecciona un medico --</option>
+          {medicos.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.nombre} ({m.especialidad})
+              </option>
+          ))}
+        </select>
+        {errors.medicoId && <p role="alert">{errors.medicoId}</p>}
 
-      <label htmlFor="fechaHora">Fecha y hora</label>
-      <input
-        id="fechaHora"
-        name="fechaHora"
-        type="datetime-local"
-        value={form.fechaHora}
-        onChange={handleChange}
-        required
-      />
-      {errors.fechaHora && <p role="alert">{errors.fechaHora}</p>}
+        <label htmlFor="fechaHora">Fecha y hora</label>
+        <input
+            id="fechaHora"
+            name="fechaHora"
+            type="datetime-local"
+            value={form.fechaHora}
+            onChange={handleChange}
+            required
+        />
+        {errors.fechaHora && <p role="alert">{errors.fechaHora}</p>}
 
-      {serverError && <p role="alert">{serverError}</p>}
-      {success && <p>Cita agendada correctamente.</p>}
+        {serverError && <p role="alert">{serverError}</p>}
+        {success && <p>Cita agendada correctamente.</p>}
 
-      <button type="submit" disabled={submitting}>
-        {submitting ? 'Agendando...' : 'Agendar cita'}
-      </button>
-    </form>
+        <button type="submit" disabled={submitting}>
+          {submitting ? 'Agendando...' : 'Agendar cita'}
+        </button>
+      </form>
   )
 }
