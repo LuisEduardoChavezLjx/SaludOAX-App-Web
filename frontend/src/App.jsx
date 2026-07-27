@@ -19,7 +19,7 @@ function HomeRedirect() {
     switch (user.rol) {
         case 'ADMIN': return <Navigate to="/admin/usuarios" replace />
         case 'MEDICO': return <Navigate to="/medico/agenda" replace />
-        case 'PACIENTE': return <Navigate to="/citas" replace />
+        case 'PACIENTE': return <Navigate to="/mis-citas" replace />
         default: return <Navigate to="/login" replace />
     }
 }

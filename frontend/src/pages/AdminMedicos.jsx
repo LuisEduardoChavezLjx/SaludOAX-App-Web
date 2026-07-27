@@ -42,7 +42,7 @@ export default function AdminMedicos() {
   const handleToggleDisponible = (medico) => {
     setMedicos((prev) => ({
       ...prev,
-      content: prev.content.map((m) => m.id === medico.id ? { ...m, disponible: !m.disponible } : m),
+      content: prev.contenido.map((m) => m.id === medico.id ? { ...m, disponible: !m.disponible } : m),
     }))
     if (seleccionado?.id === medico.id) {
       setSeleccionado((prev) => ({ ...prev, disponible: !prev.disponible }))

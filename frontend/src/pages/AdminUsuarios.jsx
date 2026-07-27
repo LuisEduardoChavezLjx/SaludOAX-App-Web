@@ -55,14 +55,14 @@ export default function AdminUsuarios() {
       await cambiarEstadoUsuario(usuario.id, !usuario.activo)
       setUsuarios((prev) => ({
         ...prev,
-        content: prev.content.map((u) => u.id === usuario.id ? { ...u, activo: !u.activo } : u),
+        content: prev.contenido.map((u) => u.id === usuario.id ? { ...u, activo: !u.activo } : u),
       }))
       setModalBaja(null)
     } catch {
       // Mock
       setUsuarios((prev) => ({
         ...prev,
-        content: prev.content.map((u) => u.id === usuario.id ? { ...u, activo: !u.activo } : u),
+        content: prev.contenido.map((u) => u.id === usuario.id ? { ...u, activo: !u.activo } : u),
       }))
       setModalBaja(null)
     } finally {
@@ -75,7 +75,7 @@ export default function AdminUsuarios() {
   if (loading) return <Layout title="Gestión de usuarios"><LoadingSpinner /></Layout>
   if (error) return <Layout title="Gestión de usuarios"><EmptyState title="Error" description={error} /></Layout>
 
-  const totalPorRol = (rol) => usuarios?.content.filter((u) => u.rol === rol).length || 0
+  const totalPorRol = (rol) => usuarios?.contenido.filter((u) => u.rol === rol).length || 0
 
   return (
       <Layout title="Gestión de usuarios">

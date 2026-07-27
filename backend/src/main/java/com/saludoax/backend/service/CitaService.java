@@ -11,10 +11,12 @@ import com.saludoax.backend.repository.PacienteRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class CitaService {
 
     private final CitaRepository citaRepository;
@@ -46,6 +48,7 @@ public class CitaService {
         return toDTO(buscarOFallar(id));
     }
 
+    @Transactional
     public CitaDTO crear(CitaDTO dto) {
         Paciente paciente = pacienteRepository.findById(dto.getPacienteId())
                 .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado"));
@@ -66,6 +69,7 @@ public class CitaService {
         return toDTO(cita);
     }
 
+    @Transactional
     public CitaDTO cambiarEstado(Long id, String nuevoEstado) {
         Cita cita = buscarOFallar(id);
         cita.setEstado(EstadoCita.valueOf(nuevoEstado.toUpperCase()));
