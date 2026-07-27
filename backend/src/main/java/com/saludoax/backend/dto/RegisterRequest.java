@@ -12,20 +12,14 @@ public class RegisterRequest {
 
     @NotBlank(message = "La contrasena es obligatoria")
     @Pattern(
-        regexp = "^(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}$",
-        message = "La contrasena debe tener al menos 8 caracteres, una mayuscula, un numero y un caracter especial"
+            regexp = "^(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}$",
+            message = "La contrasena debe tener al menos 8 caracteres, una mayuscula, un numero y un caracter especial"
     )
     private String password;
-
-    @NotBlank(message = "El rol es obligatorio")
-    private String rol; // "PACIENTE" o "MEDICO" - ADMIN no se autorregistra
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
-
-    public String getRol() { return rol; }
-    public void setRol(String rol) { this.rol = rol; }
 }

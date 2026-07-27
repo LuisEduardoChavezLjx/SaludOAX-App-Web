@@ -5,7 +5,6 @@ export async function crearCita(datos) {
   return data
 }
 
-// page es 0-based, tal como lo espera Spring Data
 export async function listarCitasPorPaciente(pacienteId, page = 0, size = 10) {
   const { data } = await axiosClient.get(`/citas/paciente/${pacienteId}`, {
     params: { page, size },

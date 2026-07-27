@@ -68,12 +68,17 @@ public class PacienteService {
     private void aplicarCambios(Paciente paciente, PacienteDTO dto) {
         paciente.setNombre(dto.getNombre());
         paciente.setTelefono(dto.getTelefono());
-        paciente.setPeso(dto.getPeso());
-        paciente.setPresion(dto.getPresion());
+        paciente.setPesoKg(dto.getPesoKg());
+        paciente.setPresionSistolica(dto.getPresionSistolica());
+        paciente.setPresionDiastolica(dto.getPresionDiastolica());
+        paciente.setFechaNacimiento(dto.getFechaNacimiento());
+        paciente.setSexo(dto.getSexo());
         paciente.setContextoSalud(dto.getContextoSalud());
     }
 
     private PacienteDTO toDTO(Paciente p) {
-        return new PacienteDTO(p.getId(), p.getNombre(), p.getTelefono(), p.getPeso(), p.getPresion(), p.getContextoSalud());
+        return new PacienteDTO(p.getId(), p.getNombre(), p.getTelefono(), p.getPesoKg(),
+                p.getPresionSistolica(), p.getPresionDiastolica(),
+                p.getFechaNacimiento(), p.getSexo(), p.getContextoSalud());
     }
 }

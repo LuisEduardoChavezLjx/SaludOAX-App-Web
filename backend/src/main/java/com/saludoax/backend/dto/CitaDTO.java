@@ -1,8 +1,12 @@
 package com.saludoax.backend.dto;
 
+import com.saludoax.backend.dto.validacion.PesoValido;
+import com.saludoax.backend.dto.validacion.PresionDiastolicaValida;
+import com.saludoax.backend.dto.validacion.PresionSistolicaValida;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class CitaDTO {
@@ -23,22 +27,31 @@ public class CitaDTO {
 
     private String estado;
 
-    private String peso;
-    private String presion;
+    @PesoValido
+    private BigDecimal pesoKg;
+
+    @PresionSistolicaValida
+    private Integer presionSistolica;
+
+    @PresionDiastolicaValida
+    private Integer presionDiastolica;
+
     private String contextoSalud;
 
     public CitaDTO() {}
 
     public CitaDTO(Long id, Long pacienteId, String pacienteNombre, Long medicoId,
-                    LocalDateTime fechaHora, String estado, String peso, String presion, String contextoSalud) {
+                   LocalDateTime fechaHora, String estado, BigDecimal pesoKg,
+                   Integer presionSistolica, Integer presionDiastolica, String contextoSalud) {
         this.id = id;
         this.pacienteId = pacienteId;
         this.pacienteNombre = pacienteNombre;
         this.medicoId = medicoId;
         this.fechaHora = fechaHora;
         this.estado = estado;
-        this.peso = peso;
-        this.presion = presion;
+        this.pesoKg = pesoKg;
+        this.presionSistolica = presionSistolica;
+        this.presionDiastolica = presionDiastolica;
         this.contextoSalud = contextoSalud;
     }
 
@@ -60,11 +73,14 @@ public class CitaDTO {
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
 
-    public String getPeso() { return peso; }
-    public void setPeso(String peso) { this.peso = peso; }
+    public BigDecimal getPesoKg() { return pesoKg; }
+    public void setPesoKg(BigDecimal pesoKg) { this.pesoKg = pesoKg; }
 
-    public String getPresion() { return presion; }
-    public void setPresion(String presion) { this.presion = presion; }
+    public Integer getPresionSistolica() { return presionSistolica; }
+    public void setPresionSistolica(Integer presionSistolica) { this.presionSistolica = presionSistolica; }
+
+    public Integer getPresionDiastolica() { return presionDiastolica; }
+    public void setPresionDiastolica(Integer presionDiastolica) { this.presionDiastolica = presionDiastolica; }
 
     public String getContextoSalud() { return contextoSalud; }
     public void setContextoSalud(String contextoSalud) { this.contextoSalud = contextoSalud; }

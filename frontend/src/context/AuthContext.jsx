@@ -12,8 +12,8 @@ export function AuthProvider({ children }) {
     return data
   }
 
-  const handleRegister = async (email, password, rol) => {
-    const data = await authService.register(email, password, rol)
+  const handleRegister = async (email, password) => {
+    const data = await authService.register(email, password)
     setUser({ email: data.email, rol: data.rol })
     return data
   }
@@ -24,9 +24,9 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login: handleLogin, register: handleRegister, logout: handleLogout }}>
-      {children}
-    </AuthContext.Provider>
+      <AuthContext.Provider value={{ user, login: handleLogin, register: handleRegister, logout: handleLogout }}>
+        {children}
+      </AuthContext.Provider>
   )
 }
 

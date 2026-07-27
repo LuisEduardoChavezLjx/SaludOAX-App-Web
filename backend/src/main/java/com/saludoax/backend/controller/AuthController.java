@@ -2,12 +2,17 @@ package com.saludoax.backend.controller;
 
 import com.saludoax.backend.dto.AuthResponse;
 import com.saludoax.backend.dto.LoginRequest;
+import com.saludoax.backend.dto.RecuperarRequest;
 import com.saludoax.backend.dto.RegisterRequest;
+import com.saludoax.backend.dto.RestablecerRequest;
 import com.saludoax.backend.service.AuthService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -29,5 +34,24 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout(@RequestHeader(HttpHeaders.AUTHORIZATION) String bearerToken) {
+        authService.logout(bearerToken);
+        return ResponseEntity.ok(Map.of("mensaje", "Sesion cerrada"));
+    }
+
+    @PostMapping("/recuperar")
+    public ResponseEntity<Map<String, String>> recuperar(@Valid @RequestBody RecuperarRequest request) {
+        authService.solicitarRecuperacion(request.getEmail());
+        return ResponseEntity.ok(Map.of(
+                "mensaje", "Si el correo existe, se enviaran instrucciones para restablecer la contrasena"));
+    }
+
+    @PostMapping("/restablecer")
+    public ResponseEntity<Map<String, String>> restablecer(@Valid @RequestBody RestablecerRequest request) {
+        authService.restablecerPassword(request.getToken(), request.getNuevaPassword());
+        return ResponseEntity.ok(Map.of("mensaje", "Contrasena restablecida"));
     }
 }

@@ -7,8 +7,8 @@ evitando que pierdan su turno por ausentarse brevemente.
 
 ## Integrantes
 
-- [Nombre completo integrante 1]
-- [Nombre completo integrante 2]
+- Cruz Bautista Mauricio Raciel
+- Chavez Hernandez Luis Eduardo
 
 ## Tecnologías utilizadas
 
@@ -139,21 +139,3 @@ Contrato completo de campos entre backend y frontend: ver
 
 ## URL base de la API
 
-`http://localhost:8080/api` (local) — se actualizará con la URL del VPS
-en HTTPS antes de la entrega final.
-
-## Links
-
-- Tablero de GitHub Projects: [pendiente — pegar aquí]
-- Prototipo de Figma: [pendiente — pegar aquí]
-- Proyecto desplegado (VPS, HTTPS): [pendiente — pegar aquí]
-
-## Estado del desarrollo
-
-- [x] Fase 0 — Fundación compartida (auth JWT, roles, MySQL, Flyway)
-- [x] Flujo A — Pacientes y Citas (CRUD, paginación server-side)
-- [ ] Flujo B — Médicos, estimación por IA, sala de espera
-- [ ] Comunicación (correo, SMS, WhatsApp)
-- [ ] Diseño en Figma
-- [ ] Pruebas con Bruno
-- [ ] Despliegue en VPS con HTTPS

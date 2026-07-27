@@ -1,40 +1,29 @@
-# Copia este archivo como application.properties y llena con tus valores reales.
-# NUNCA subas application.properties con datos reales al repositorio.
-
-spring.application.name=saludoax-backend
+spring.application.name=saludoax
 server.port=8080
 
-# Base de datos MySQL
-spring.datasource.url=jdbc:mysql://localhost:3306/saludoax?useSSL=false&serverTimezone=UTC
+spring.datasource.url=jdbc:mysql://localhost:3306/saludoax?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Mexico_City
 spring.datasource.username=CAMBIA_ESTE_USUARIO
 spring.datasource.password=CAMBIA_ESTA_PASSWORD
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 
-# JPA / Hibernate - Flyway controla el esquema, Hibernate NO debe crear tablas
 spring.jpa.hibernate.ddl-auto=validate
-spring.jpa.show-sql=true
-spring.jpa.properties.hibernate.format_sql=true
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
+spring.jpa.open-in-view=false
+# spring.jpa.show-sql=true
 
-# Flyway
 spring.flyway.enabled=true
 spring.flyway.locations=classpath:db/migration
-spring.flyway.baseline-on-migrate=true
 
-# JWT
-jwt.secret=CAMBIA_ESTE_SECRETO_POR_UNO_LARGO_Y_ALEATORIO_DE_AL_MENOS_64_CARACTERES
-jwt.expiration-ms=3600000
+jwt.secret=CAMBIA_ESTE_SECRETO
+jwt.expiration-ms=1800000
 
-# Servicio de IA (Groq o Gemini) - se usara en Flujo B
-ia.api.url=CAMBIA_ESTA_URL
-ia.api.key=CAMBIA_ESTA_KEY
+app.ia.api-key=CAMBIA_ESTA_KEY
+app.ia.api-url=CAMBIA_ESTA_URL
+app.ia.model=llama-3.3-70b-versatile
 
-# Correo (Postfix en VPS) - se usara en Fase 7
 spring.mail.host=localhost
 spring.mail.port=25
 
-# Twilio (SMS y WhatsApp) - se usara en Fase 7
-twilio.account.sid=CAMBIA_ESTE_SID
-twilio.auth.token=CAMBIA_ESTE_TOKEN
-twilio.whatsapp.from=CAMBIA_ESTE_NUMERO
-twilio.sms.from=CAMBIA_ESTE_NUMERO
+twilio.account-sid=CAMBIA_ESTE_SID
+twilio.auth-token=CAMBIA_ESTE_TOKEN
+twilio.whatsapp-from=CAMBIA_ESTE_NUMERO
+twilio.sms-from=CAMBIA_ESTE_NUMERO

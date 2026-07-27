@@ -21,11 +21,20 @@ public class Paciente {
     @Column(length = 20)
     private String telefono;
 
-    @Column(length = 20)
-    private String peso;
+    @Column(name = "peso_kg", precision = 5, scale = 2)
+    private java.math.BigDecimal pesoKg;
 
-    @Column(length = 20)
-    private String presion;
+    @Column(name = "presion_sistolica")
+    private Integer presionSistolica;
+
+    @Column(name = "presion_diastolica")
+    private Integer presionDiastolica;
+
+    @Column(name = "fecha_nacimiento")
+    private java.time.LocalDate fechaNacimiento;
+
+    @Column(name = "sexo", length = 20)
+    private String sexo;
 
     @Column(name = "contexto_salud", length = 500)
     private String contextoSalud;
@@ -47,11 +56,20 @@ public class Paciente {
     public String getTelefono() { return telefono; }
     public void setTelefono(String telefono) { this.telefono = telefono; }
 
-    public String getPeso() { return peso; }
-    public void setPeso(String peso) { this.peso = peso; }
+    public java.math.BigDecimal getPesoKg() { return pesoKg; }
+    public void setPesoKg(java.math.BigDecimal pesoKg) { this.pesoKg = pesoKg; }
 
-    public String getPresion() { return presion; }
-    public void setPresion(String presion) { this.presion = presion; }
+    public Integer getPresionSistolica() { return presionSistolica; }
+    public void setPresionSistolica(Integer presionSistolica) { this.presionSistolica = presionSistolica; }
+
+    public Integer getPresionDiastolica() { return presionDiastolica; }
+    public void setPresionDiastolica(Integer presionDiastolica) { this.presionDiastolica = presionDiastolica; }
+
+    public java.time.LocalDate getFechaNacimiento() { return fechaNacimiento; }
+    public void setFechaNacimiento(java.time.LocalDate fechaNacimiento) { this.fechaNacimiento = fechaNacimiento; }
+
+    public String getSexo() { return sexo; }
+    public void setSexo(String sexo) { this.sexo = sexo; }
 
     public String getContextoSalud() { return contextoSalud; }
     public void setContextoSalud(String contextoSalud) { this.contextoSalud = contextoSalud; }
