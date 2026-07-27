@@ -130,9 +130,15 @@ public class DataSeeder implements CommandLineRunner {
         return usuarioRepository.findByEmail(email).orElseGet(() -> {
             Usuario u = new Usuario();
             u.setEmail(email);
+            u.setNombre(deriveNombre(email));
             u.setPasswordHash(passwordEncoder.encode(password));
             u.setRol(rol);
             return usuarioRepository.save(u);
         });
+    }
+
+    private String deriveNombre(String email) {
+        int at = email.indexOf('@');
+        return at > 0 ? email.substring(0, at) : email;
     }
 }

@@ -2,7 +2,9 @@ package com.saludoax.backend.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -25,6 +27,12 @@ public class Medico {
     @Column(nullable = false, length = 100)
     private String especialidad;
 
+    @Column(length = 20)
+    private String cedula;
+
+    @Column(length = 20)
+    private String consultorio;
+
     @Column(nullable = false)
     private Boolean disponible = true;
 
@@ -35,6 +43,9 @@ public class Medico {
         inverseJoinColumns = @JoinColumn(name = "especialidad_id")
     )
     private Set<Especialidad> especialidades = new HashSet<>();
+
+    @OneToMany(mappedBy = "medico", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<HorarioMedico> horarios = new ArrayList<>();
 
     @Column(name = "creado_en", nullable = false, updatable = false)
     private LocalDateTime creadoEn = LocalDateTime.now();
@@ -53,11 +64,20 @@ public class Medico {
     public String getEspecialidad() { return especialidad; }
     public void setEspecialidad(String especialidad) { this.especialidad = especialidad; }
 
+    public String getCedula() { return cedula; }
+    public void setCedula(String cedula) { this.cedula = cedula; }
+
+    public String getConsultorio() { return consultorio; }
+    public void setConsultorio(String consultorio) { this.consultorio = consultorio; }
+
     public Boolean getDisponible() { return disponible; }
     public void setDisponible(Boolean disponible) { this.disponible = disponible; }
 
     public Set<Especialidad> getEspecialidades() { return especialidades; }
     public void setEspecialidades(Set<Especialidad> especialidades) { this.especialidades = especialidades; }
+
+    public List<HorarioMedico> getHorarios() { return horarios; }
+    public void setHorarios(List<HorarioMedico> horarios) { this.horarios = horarios; }
 
     public LocalDateTime getCreadoEn() { return creadoEn; }
     public void setCreadoEn(LocalDateTime creadoEn) { this.creadoEn = creadoEn; }
