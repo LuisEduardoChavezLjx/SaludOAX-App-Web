@@ -17,7 +17,7 @@ jwt.secret=CAMBIA_ESTE_SECRETO
 jwt.expiration-ms=1800000
 
 app.ia.api-key=CAMBIA_ESTA_KEY
-app.ia.api-url=CAMBIA_ESTA_URL
+app.ia.api-url=https://api.groq.com/openai/v1/chat/completions
 app.ia.model=llama-3.3-70b-versatile
 
 spring.mail.host=localhost
