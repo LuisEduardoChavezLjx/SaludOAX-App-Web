@@ -2,6 +2,7 @@ package com.saludoax.backend.service;
 
 import com.saludoax.backend.dto.TurnoSalaEsperaDTO;
 import com.saludoax.backend.model.Cita;
+import com.saludoax.backend.model.EstadoCita;
 import com.saludoax.backend.model.EstadoTurno;
 import com.saludoax.backend.model.Estimacion;
 import com.saludoax.backend.model.TurnoSalaEspera;
@@ -66,6 +67,26 @@ public class SalaEsperaService {
         TurnoSalaEspera turno = new TurnoSalaEspera();
         turno.setCita(cita);
         turnoRepository.save(turno);
+    }
+
+    @Transactional
+    public void iniciar(Long citaId) {
+        TurnoSalaEspera turno = buscarTurnoOFallar(citaId);
+        turno.setEstado(EstadoTurno.EN_CONSULTA);
+        turnoRepository.save(turno);
+    }
+
+    @Transactional
+    public void finalizar(Long citaId) {
+        TurnoSalaEspera turno = buscarTurnoOFallar(citaId);
+        turno.setEstado(EstadoTurno.FINALIZADO);
+        turno.getCita().setEstado(EstadoCita.ATENDIDA);
+        turnoRepository.save(turno);
+    }
+
+    private TurnoSalaEspera buscarTurnoOFallar(Long citaId) {
+        return turnoRepository.findByCitaId(citaId)
+                .orElseThrow(() -> new IllegalArgumentException("Turno no encontrado"));
     }
 
     private int severidad(Estimacion estimacion) {

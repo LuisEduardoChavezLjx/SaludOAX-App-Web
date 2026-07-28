@@ -1,5 +1,4 @@
 import axiosClient from './axiosClient'
-import { cambiarEstadoCita } from './citaService'
 
 export async function listarSalaEspera(medicoId) {
     const { data } = await axiosClient.get(`/medicos/${medicoId}/sala-espera`)
@@ -11,6 +10,12 @@ export async function obtenerMiTurno() {
     return data
 }
 
+export async function iniciarConsulta(citaId) {
+    const { data } = await axiosClient.post(`/citas/${citaId}/turno/iniciar`)
+    return data
+}
+
 export async function finalizarConsulta(citaId) {
-    return cambiarEstadoCita(citaId, 'ATENDIDA')
+    const { data } = await axiosClient.post(`/citas/${citaId}/turno/finalizar`)
+    return data
 }
