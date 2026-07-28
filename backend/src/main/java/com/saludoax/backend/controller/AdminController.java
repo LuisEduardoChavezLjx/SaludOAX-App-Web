@@ -9,6 +9,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -40,9 +41,16 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
+    @PutMapping("/usuarios/{id}")
+    public ResponseEntity<UsuarioAdminDTO> actualizarUsuario(@PathVariable Long id,
+                                                              @Valid @RequestBody ActualizarUsuarioRequest request) {
+        UsuarioAdminDTO actualizado = adminService.actualizarUsuario(id, request);
+        return ResponseEntity.ok(actualizado);
+    }
+
     @PatchMapping("/usuarios/{id}/desactivar")
-    public ResponseEntity<Map<String, String>> desactivarUsuario(@PathVariable Long id) {
-        adminService.desactivarUsuario(id);
+    public ResponseEntity<Map<String, String>> desactivarUsuario(@PathVariable Long id, Authentication auth) {
+        adminService.desactivarUsuario(id, auth.getName());
         return ResponseEntity.ok(Map.of("mensaje", "Usuario desactivado"));
     }
 
@@ -76,13 +84,13 @@ public class AdminController {
 
     @PatchMapping("/medicos/{id}/desactivar")
     public ResponseEntity<Map<String, String>> desactivarMedico(@PathVariable Long id) {
-        adminService.desactivarUsuario(id);
+        adminService.desactivarMedico(id);
         return ResponseEntity.ok(Map.of("mensaje", "Médico desactivado"));
     }
 
     @PatchMapping("/medicos/{id}/reactivar")
     public ResponseEntity<Map<String, String>> reactivarMedico(@PathVariable Long id) {
-        adminService.reactivarUsuario(id);
+        adminService.reactivarMedico(id);
         return ResponseEntity.ok(Map.of("mensaje", "Médico reactivado"));
     }
 }
