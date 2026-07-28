@@ -21,13 +21,16 @@ public class EstimacionService {
     private final EstimacionRepository estimacionRepository;
     private final GroqEstimacionService groqEstimacionService;
     private final FallbackEstimacionService fallbackEstimacionService;
+    private final SalaEsperaService salaEsperaService;
 
     public EstimacionService(CitaRepository citaRepository, EstimacionRepository estimacionRepository,
-                              GroqEstimacionService groqEstimacionService, FallbackEstimacionService fallbackEstimacionService) {
+                              GroqEstimacionService groqEstimacionService, FallbackEstimacionService fallbackEstimacionService,
+                              SalaEsperaService salaEsperaService) {
         this.citaRepository = citaRepository;
         this.estimacionRepository = estimacionRepository;
         this.groqEstimacionService = groqEstimacionService;
         this.fallbackEstimacionService = fallbackEstimacionService;
+        this.salaEsperaService = salaEsperaService;
     }
 
     @Transactional
@@ -48,6 +51,7 @@ public class EstimacionService {
         estimacion.setGravedad(resultado.getGravedad());
         estimacion.setTiempoEstimadoMin(resultado.getTiempoEstimadoMin());
         estimacionRepository.save(estimacion);
+        salaEsperaService.registrarLlegada(cita);
 
         return toDTO(estimacion);
     }
