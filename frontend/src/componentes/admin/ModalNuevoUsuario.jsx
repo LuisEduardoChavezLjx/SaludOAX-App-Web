@@ -1,16 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axiosClient from '../../api/axiosClient';
 
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}$/;
 const ID_FORMULARIO = 'form-nuevo-usuario';
 
-export function ModalNuevoUsuario({ abierto, onCerrar, onCreado }) {
+export function ModalNuevoUsuario({ abierto, onCerrar, onCreado, datosIniciales = null }) {
   const [form, setForm] = useState({
     rol: 'MEDICO', nombre: '', email: '', password: '', cedula: '', consultorio: '',
   });
   const [errores, setErrores] = useState({});
   const [errorGeneral, setErrorGeneral] = useState('');
   const [cargando, setCargando] = useState(false);
+  const editando = datosIniciales !== null;
+
+  useEffect(() => {
+    if (abierto) {
+      if (datosIniciales) {
+        setForm({
+          rol: datosIniciales.rol || 'PACIENTE',
+          nombre: datosIniciales.nombre || '',
+          email: datosIniciales.email || '',
+          password: '',
+          cedula: '',
+          consultorio: '',
+        });
+      } else {
+        setForm({ rol: 'MEDICO', nombre: '', email: '', password: '', cedula: '', consultorio: '' });
+      }
+      setErrores({});
+      setErrorGeneral('');
+    }
+  }, [abierto, datosIniciales]);
 
   if (!abierto) return null;
 
@@ -22,7 +42,11 @@ export function ModalNuevoUsuario({ abierto, onCerrar, onCreado }) {
     const nuevosErrores = {};
     if (!form.nombre.trim()) nuevosErrores.nombre = 'El nombre es obligatorio.';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) nuevosErrores.email = 'Correo inválido.';
-    if (!PASSWORD_REGEX.test(form.password)) {
+    if (!editando) {
+      if (!PASSWORD_REGEX.test(form.password)) {
+        nuevosErrores.password = 'Mínimo 8 caracteres, una mayúscula, un número y un carácter especial.';
+      }
+    } else if (form.password && !PASSWORD_REGEX.test(form.password)) {
       nuevosErrores.password = 'Mínimo 8 caracteres, una mayúscula, un número y un carácter especial.';
     }
     setErrores(nuevosErrores);
@@ -36,11 +60,15 @@ export function ModalNuevoUsuario({ abierto, onCerrar, onCreado }) {
 
     setCargando(true);
     try {
-      await axiosClient.post('/admin/usuarios', form);
+      if (editando) {
+        await axiosClient.put(`/admin/usuarios/${datosIniciales.id}`, form);
+      } else {
+        await axiosClient.post('/admin/usuarios', form);
+      }
       setForm({ rol: 'MEDICO', nombre: '', email: '', password: '', cedula: '', consultorio: '' });
       onCreado();
     } catch (error) {
-      setErrorGeneral(error.response?.data?.mensaje || 'No se pudo crear el usuario.');
+      setErrorGeneral(error.response?.data?.mensaje || 'No se pudo guardar el usuario.');
     } finally {
       setCargando(false);
     }
@@ -51,8 +79,8 @@ export function ModalNuevoUsuario({ abierto, onCerrar, onCreado }) {
       <div className="w-full max-w-[560px] rounded-xl bg-white shadow-[0_20px_40px_-12px_rgba(15,23,42,0.35)]">
         <div className="px-6 py-5 border-b border-line flex items-start justify-between gap-4">
           <div>
-            <h2 id="modal-alta" className="text-base font-semibold">Nuevo usuario</h2>
-            <p className="mt-1 text-sm text-muted">La cuenta y el perfil se crean en una sola operación.</p>
+            <h2 id="modal-alta" className="text-base font-semibold">{editando ? 'Editar usuario' : 'Nuevo usuario'}</h2>
+            <p className="mt-1 text-sm text-muted">{editando ? 'Actualiza los datos del usuario.' : 'La cuenta y el perfil se crean en una sola operación.'}</p>
           </div>
           <button type="button" onClick={onCerrar} className="shrink-0 text-muted hover:text-ink" aria-label="Cerrar">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
@@ -103,7 +131,7 @@ export function ModalNuevoUsuario({ abierto, onCerrar, onCreado }) {
               {errores.email && <p className="mt-2 text-xs text-urgente font-medium">{errores.email}</p>}
             </div>
 
-            {form.rol === 'MEDICO' && (
+            {form.rol === 'MEDICO' && !editando && (
               <>
                 <div>
                   <label htmlFor="cedula" className="block text-xs font-semibold uppercase tracking-[0.06em] text-muted mb-2">
@@ -130,7 +158,7 @@ export function ModalNuevoUsuario({ abierto, onCerrar, onCreado }) {
 
             <div className="col-span-2">
               <label htmlFor="password-nuevo" className="block text-xs font-semibold uppercase tracking-[0.06em] text-muted mb-2">
-                Contraseña inicial
+                {editando ? 'Nueva contraseña (dejar vacío para mantener)' : 'Contraseña inicial'}
               </label>
               <input
                 id="password-nuevo" type="password"
@@ -158,7 +186,7 @@ export function ModalNuevoUsuario({ abierto, onCerrar, onCreado }) {
             type="submit" form={ID_FORMULARIO} disabled={cargando}
             className="rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-800 active:bg-brand-900 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 disabled:opacity-60"
           >
-            {cargando ? 'Creando...' : 'Crear usuario'}
+            {cargando ? 'Guardando...' : editando ? 'Actualizar' : 'Crear usuario'}
           </button>
         </div>
       </div>

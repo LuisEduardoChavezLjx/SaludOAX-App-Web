@@ -40,6 +40,13 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
+    @PutMapping("/usuarios/{id}")
+    public ResponseEntity<UsuarioAdminDTO> actualizarUsuario(@PathVariable Long id,
+                                                              @Valid @RequestBody CrearUsuarioRequest request) {
+        UsuarioAdminDTO actualizado = adminService.actualizarUsuario(id, request);
+        return ResponseEntity.ok(actualizado);
+    }
+
     @PatchMapping("/usuarios/{id}/desactivar")
     public ResponseEntity<Map<String, String>> desactivarUsuario(@PathVariable Long id) {
         adminService.desactivarUsuario(id);
