@@ -1,8 +1,10 @@
 package com.saludoax.backend.controller;
 
 import com.saludoax.backend.dto.CitaDTO;
+import com.saludoax.backend.dto.EstimacionDTO;
 import com.saludoax.backend.dto.PageResponse;
 import com.saludoax.backend.service.CitaService;
+import com.saludoax.backend.service.EstimacionService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -17,9 +19,11 @@ import java.util.Map;
 public class CitaController {
 
     private final CitaService citaService;
+    private final EstimacionService estimacionService;
 
-    public CitaController(CitaService citaService) {
+    public CitaController(CitaService citaService, EstimacionService estimacionService) {
         this.citaService = citaService;
+        this.estimacionService = estimacionService;
     }
 
     // GET /api/citas?page=0&size=10&estado=PENDIENTE
@@ -68,5 +72,17 @@ public class CitaController {
     @PreAuthorize("hasAnyRole('ADMIN','MEDICO','PACIENTE')")
     public ResponseEntity<Map<String, Integer>> posicionEnFila(@PathVariable Long id) {
         return ResponseEntity.ok(Map.of("posicion", citaService.posicionEnFila(id)));
+    }
+
+    @PostMapping("/{id}/estimar")
+    @PreAuthorize("hasAnyRole('ADMIN','MEDICO')")
+    public ResponseEntity<EstimacionDTO> estimar(@PathVariable Long id) {
+        return ResponseEntity.ok(estimacionService.estimar(id));
+    }
+
+    @GetMapping("/{id}/estimacion")
+    @PreAuthorize("hasAnyRole('ADMIN','MEDICO','PACIENTE')")
+    public ResponseEntity<EstimacionDTO> obtenerEstimacion(@PathVariable Long id) {
+        return ResponseEntity.ok(estimacionService.obtenerPorCita(id));
     }
 }
