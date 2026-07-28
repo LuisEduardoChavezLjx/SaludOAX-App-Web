@@ -4,69 +4,36 @@ import com.saludoax.backend.dto.TurnoSalaEsperaDTO;
 import com.saludoax.backend.model.Cita;
 import com.saludoax.backend.model.EstadoCita;
 import com.saludoax.backend.model.EstadoTurno;
-import com.saludoax.backend.model.Estimacion;
 import com.saludoax.backend.model.TurnoSalaEspera;
-import com.saludoax.backend.repository.EstimacionRepository;
+import com.saludoax.backend.repository.TurnoSalaEsperaProjection;
 import com.saludoax.backend.repository.TurnoSalaEsperaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
 public class SalaEsperaService {
 
-    private static final int MINUTOS_POR_DEFECTO = 15;
-    private static final List<EstadoTurno> ESTADOS_ACTIVOS = List.of(EstadoTurno.ESPERANDO, EstadoTurno.EN_CONSULTA);
+    private static final List<String> ESTADOS_ACTIVOS = List.of(
+            EstadoTurno.ESPERANDO.name(), EstadoTurno.EN_CONSULTA.name());
 
     private final TurnoSalaEsperaRepository turnoRepository;
-    private final EstimacionRepository estimacionRepository;
 
-    public SalaEsperaService(TurnoSalaEsperaRepository turnoRepository, EstimacionRepository estimacionRepository) {
+    public SalaEsperaService(TurnoSalaEsperaRepository turnoRepository) {
         this.turnoRepository = turnoRepository;
-        this.estimacionRepository = estimacionRepository;
     }
 
     public List<TurnoSalaEsperaDTO> listarPorMedico(Long medicoId) {
-        List<TurnoConEstimacion> ordenados = turnoRepository
-                .findByCita_Medico_IdAndEstadoIn(medicoId, ESTADOS_ACTIVOS)
-                .stream()
-                .map(t -> new TurnoConEstimacion(t, estimacionRepository.findByCitaId(t.getCita().getId()).orElse(null)))
-                .sorted(Comparator
-                        .comparingInt((TurnoConEstimacion tc) -> severidad(tc.estimacion))
-                        .thenComparing(tc -> tc.turno.getHoraLlegada()))
+        return turnoRepository.listarConTriageYPosicion(medicoId, ESTADOS_ACTIVOS).stream()
+                .map(this::toDTO)
                 .toList();
-
-        List<TurnoSalaEsperaDTO> resultado = new ArrayList<>();
-        int minutosAcumulados = 0;
-        for (int i = 0; i < ordenados.size(); i++) {
-            TurnoConEstimacion tc = ordenados.get(i);
-            int minutosConsulta = tc.estimacion != null ? tc.estimacion.getTiempoEstimadoMin() : MINUTOS_POR_DEFECTO;
-
-            resultado.add(new TurnoSalaEsperaDTO(
-                    tc.turno.getCita().getId(),
-                    tc.turno.getCita().getPaciente().getNombre(),
-                    i + 1,
-                    tc.turno.getEstado().name(),
-                    tc.estimacion != null ? tc.estimacion.getGravedad().name() : null,
-                    minutosAcumulados,
-                    tc.turno.getHoraLlegada()
-            ));
-
-            minutosAcumulados += minutosConsulta;
-        }
-        return resultado;
     }
 
     public TurnoSalaEsperaDTO obtenerTurnoDeCita(Long citaId) {
-        return turnoRepository.findByCitaId(citaId)
-                .map(turno -> listarPorMedico(turno.getCita().getMedico().getId()).stream()
-                        .filter(dto -> dto.getCitaId().equals(citaId))
-                        .findFirst()
-                        .orElse(null))
+        return turnoRepository.buscarConTriageYPosicion(citaId, ESTADOS_ACTIVOS)
+                .map(this::toDTO)
                 .orElse(null);
     }
 
@@ -98,14 +65,15 @@ public class SalaEsperaService {
                 .orElseThrow(() -> new IllegalArgumentException("Turno no encontrado"));
     }
 
-    private int severidad(Estimacion estimacion) {
-        if (estimacion == null) return 3;
-        return switch (estimacion.getGravedad()) {
-            case URGENTE -> 0;
-            case MODERADA -> 1;
-            case LEVE -> 2;
-        };
+    private TurnoSalaEsperaDTO toDTO(TurnoSalaEsperaProjection p) {
+        return new TurnoSalaEsperaDTO(
+                p.getCitaId(),
+                p.getPacienteNombre(),
+                p.getPosicion(),
+                p.getEstado(),
+                p.getGravedad(),
+                p.getMinutosEsperaEstimados(),
+                p.getHoraLlegada()
+        );
     }
-
-    private record TurnoConEstimacion(TurnoSalaEspera turno, Estimacion estimacion) {}
 }
