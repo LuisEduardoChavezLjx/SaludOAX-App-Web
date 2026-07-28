@@ -12,7 +12,6 @@ public class CrearUsuarioRequest {
     @Email
     private String email;
 
-    @NotBlank(message = "La contraseña es obligatoria")
     @Pattern(regexp = "^(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}$",
              message = "La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un carácter especial")
     private String password;

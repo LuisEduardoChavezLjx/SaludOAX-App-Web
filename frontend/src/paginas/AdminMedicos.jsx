@@ -1,16 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import axiosClient from '../api/axiosClient';
-import { useAuth } from '../context/AuthContext';
 import { SidebarAdmin } from '../componentes/comunes/SidebarAdmin';
 import { HeaderAdmin } from '../componentes/comunes/HeaderAdmin';
 import { ModalNuevoMedico } from '../componentes/admin/ModalNuevoMedico';
+import ConfirmModal from '../components/ConfirmModal';
 
 const TAMANO_PAGINA = 10;
-const DIAS = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'];
 
 export default function AdminMedicos() {
-  const { user } = useAuth();
-
   const [medicos, setMedicos] = useState([]);
   const [pagina, setPagina] = useState(0);
   const [totalPaginas, setTotalPaginas] = useState(1);
@@ -24,6 +21,7 @@ export default function AdminMedicos() {
   const [medicoSeleccionado, setMedicoSeleccionado] = useState(null);
   const [modalMedicoAbierto, setModalMedicoAbierto] = useState(false);
   const [editando, setEditando] = useState(false);
+  const [confirmarAccion, setConfirmarAccion] = useState(null);
 
   const cargarMedicos = useCallback(async () => {
     setCargando(true);
@@ -55,16 +53,30 @@ export default function AdminMedicos() {
   }, [cargarMedicos]);
 
   function manejarDesactivar(medicoId) {
-    if (!confirm('¿Desactivar este médico? Perderá acceso al sistema.')) return;
-    axiosClient.patch(`/admin/medicos/${medicoId}/desactivar`)
-      .then(cargarMedicos)
-      .catch(() => setError('No se pudo desactivar.'));
+    setConfirmarAccion({
+      tipo: 'desactivar',
+      medicoId,
+      titulo: 'Desactivar médico',
+      mensaje: '¿Desactivar este médico? Perderá acceso al sistema.',
+    });
   }
 
   function manejarReactivar(medicoId) {
-    axiosClient.patch(`/admin/medicos/${medicoId}/reactivar`)
-      .then(cargarMedicos)
-      .catch(() => setError('No se pudo reactivar.'));
+    setConfirmarAccion({
+      tipo: 'reactivar',
+      medicoId,
+      titulo: 'Reactivar médico',
+      mensaje: '¿Reactivar este médico? Recuperará su acceso al sistema.',
+    });
+  }
+
+  function ejecutarConfirmacion() {
+    if (!confirmarAccion) return;
+    const { tipo, medicoId } = confirmarAccion;
+    const ruta = tipo === 'desactivar' ? 'desactivar' : 'reactivar';
+    axiosClient.patch(`/admin/medicos/${medicoId}/${ruta}`)
+      .then(() => { setConfirmarAccion(null); cargarMedicos(); })
+      .catch(() => setError('No se pudo completar la operación.'));
   }
 
   function iniciales(nombre) {
@@ -319,6 +331,14 @@ export default function AdminMedicos() {
         onCerrar={() => { setModalMedicoAbierto(false); setMedicoSeleccionado(null); setEditando(false); }}
         onGuardado={() => { setModalMedicoAbierto(false); setMedicoSeleccionado(null); setEditando(false); cargarMedicos(); }}
         datosIniciales={editando ? medicoSeleccionado : null}
+      />
+
+      <ConfirmModal
+        open={!!confirmarAccion}
+        title={confirmarAccion?.titulo || ''}
+        message={confirmarAccion?.mensaje || ''}
+        onConfirm={ejecutarConfirmacion}
+        onCancel={() => setConfirmarAccion(null)}
       />
     </div>
   );
