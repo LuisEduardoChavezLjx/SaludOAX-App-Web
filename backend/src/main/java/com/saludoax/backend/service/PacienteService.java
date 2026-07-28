@@ -2,6 +2,7 @@ package com.saludoax.backend.service;
 
 import com.saludoax.backend.dto.PacienteDTO;
 import com.saludoax.backend.dto.TurnoResponseDTO;
+import com.saludoax.backend.dto.TurnoSalaEsperaDTO;
 import com.saludoax.backend.dto.UltimosVitalesDTO;
 import com.saludoax.backend.model.Cita;
 import com.saludoax.backend.model.EstadoCita;
@@ -26,12 +27,14 @@ public class PacienteService {
     private final PacienteRepository pacienteRepository;
     private final UsuarioRepository usuarioRepository;
     private final CitaRepository citaRepository;
+    private final SalaEsperaService salaEsperaService;
 
     public PacienteService(PacienteRepository pacienteRepository, UsuarioRepository usuarioRepository,
-                           CitaRepository citaRepository) {
+                           CitaRepository citaRepository, SalaEsperaService salaEsperaService) {
         this.pacienteRepository = pacienteRepository;
         this.usuarioRepository = usuarioRepository;
         this.citaRepository = citaRepository;
+        this.salaEsperaService = salaEsperaService;
     }
 
     public Page<PacienteDTO> listar(String nombre, Pageable pageable) {
@@ -106,20 +109,19 @@ public class PacienteService {
                 .findFirstByPacienteIdAndEstadoInOrderByFechaHoraAsc(paciente.getId(), activos)
                 .orElseThrow(() -> new IllegalArgumentException("No tienes citas pendientes"));
 
-        int posicion = citaRepository.findCitasAntesEnFila(cita.getMedico().getId(), cita.getFechaHora()).size();
-        int minutosEstimados = (posicion + 1) * 15;
+        TurnoSalaEsperaDTO turno = salaEsperaService.obtenerTurnoDeCita(cita.getId());
 
         String horaFormateada = cita.getFechaHora()
                 .format(DateTimeFormatter.ofPattern("h:mm a", new Locale("es", "MX")));
 
         return new TurnoResponseDTO(
-                posicion + 1,
-                minutosEstimados,
+                turno != null ? turno.getPosicion() : 0,
+                turno != null ? turno.getMinutosEsperaEstimados() : 0,
                 cita.getMedico().getNombre(),
                 cita.getMedico().getEspecialidad(),
                 horaFormateada,
                 cita.getMedico().getConsultorio(),
-                "PENDIENTE"
+                turno != null ? turno.getGravedad() : null
         );
     }
 

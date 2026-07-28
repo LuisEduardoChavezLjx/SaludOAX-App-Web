@@ -61,6 +61,15 @@ public class SalaEsperaService {
         return resultado;
     }
 
+    public TurnoSalaEsperaDTO obtenerTurnoDeCita(Long citaId) {
+        return turnoRepository.findByCitaId(citaId)
+                .map(turno -> listarPorMedico(turno.getCita().getMedico().getId()).stream()
+                        .filter(dto -> dto.getCitaId().equals(citaId))
+                        .findFirst()
+                        .orElse(null))
+                .orElse(null);
+    }
+
     @Transactional
     public void registrarLlegada(Cita cita) {
         if (turnoRepository.findByCitaId(cita.getId()).isPresent()) return;
