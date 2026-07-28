@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface CitaRepository extends JpaRepository<Cita, Long> {
 
@@ -23,4 +24,8 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
            "AND c.estado IN ('PENDIENTE','CONFIRMADA') " +
            "AND c.fechaHora < :fechaHora ORDER BY c.fechaHora ASC")
     List<Cita> findCitasAntesEnFila(@Param("medicoId") Long medicoId, @Param("fechaHora") LocalDateTime fechaHora);
+
+    Optional<Cita> findFirstByPacienteIdAndEstadoInOrderByFechaHoraDesc(Long pacienteId, List<EstadoCita> estados);
+
+    Optional<Cita> findFirstByPacienteIdAndEstadoInOrderByFechaHoraAsc(Long pacienteId, List<EstadoCita> estados);
 }

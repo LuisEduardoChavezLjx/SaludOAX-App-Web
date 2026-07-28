@@ -29,13 +29,13 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const handleLogout = useCallback(() => {
-    authService.logout()
+  const handleLogout = useCallback(async () => {
+    await authService.logout()
     setUser(null)
   }, [])
 
   return (
-      <AuthContext.Provider value={{ user, cargando, login: handleLogin, register: handleRegister, logout: handleLogout }}>
+      <AuthContext.Provider value={{ user, cargando, estaAutenticado: !!user, login: handleLogin, register: handleRegister, logout: handleLogout }}>
         {children}
       </AuthContext.Provider>
   )

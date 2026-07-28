@@ -1,7 +1,9 @@
 package com.saludoax.backend.controller;
 
-import com.saludoax.backend.dto.PacienteDTO;
 import com.saludoax.backend.dto.PageResponse;
+import com.saludoax.backend.dto.PacienteDTO;
+import com.saludoax.backend.dto.TurnoResponseDTO;
+import com.saludoax.backend.dto.UltimosVitalesDTO;
 import com.saludoax.backend.model.Usuario;
 import com.saludoax.backend.repository.UsuarioRepository;
 import com.saludoax.backend.service.PacienteService;
@@ -47,6 +49,22 @@ public class PacienteController {
         Usuario usuario = usuarioRepository.findByEmail(auth.getName())
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
         return ResponseEntity.ok(pacienteService.buscarPorUsuarioId(usuario.getId()));
+    }
+
+    @GetMapping("/mi-turno")
+    @PreAuthorize("hasRole('PACIENTE')")
+    public ResponseEntity<TurnoResponseDTO> miTurno(Authentication auth) {
+        Usuario usuario = usuarioRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        return ResponseEntity.ok(pacienteService.obtenerMiTurno(usuario.getId()));
+    }
+
+    @GetMapping("/ultimos-vitales")
+    @PreAuthorize("hasRole('PACIENTE')")
+    public ResponseEntity<UltimosVitalesDTO> ultimosVitales(Authentication auth) {
+        Usuario usuario = usuarioRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        return ResponseEntity.ok(pacienteService.obtenerUltimosVitales(usuario.getId()));
     }
 
     @PostMapping
