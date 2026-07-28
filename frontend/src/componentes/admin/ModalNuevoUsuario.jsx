@@ -1,35 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import axiosClient from '../../api/axiosClient';
 
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}$/;
 const ID_FORMULARIO = 'form-nuevo-usuario';
+const ETIQUETAS_ROL = { ADMIN: 'Administrador', MEDICO: 'Médico', PACIENTE: 'Paciente' };
 
 export function ModalNuevoUsuario({ abierto, onCerrar, onCreado, datosIniciales = null }) {
+  const editando = datosIniciales !== null;
   const [form, setForm] = useState({
     rol: 'MEDICO', nombre: '', email: '', password: '', cedula: '', consultorio: '',
   });
   const [errores, setErrores] = useState({});
   const [errorGeneral, setErrorGeneral] = useState('');
   const [cargando, setCargando] = useState(false);
-  const editando = datosIniciales !== null;
 
   useEffect(() => {
-    if (abierto) {
-      if (datosIniciales) {
-        setForm({
-          rol: datosIniciales.rol || 'PACIENTE',
-          nombre: datosIniciales.nombre || '',
-          email: datosIniciales.email || '',
-          password: '',
-          cedula: '',
-          consultorio: '',
-        });
-      } else {
-        setForm({ rol: 'MEDICO', nombre: '', email: '', password: '', cedula: '', consultorio: '' });
-      }
-      setErrores({});
-      setErrorGeneral('');
+    if (!abierto) return;
+    if (datosIniciales) {
+      setForm({
+        rol: datosIniciales.rol, nombre: datosIniciales.nombre, email: datosIniciales.email,
+        password: '', cedula: '', consultorio: '',
+      });
+    } else {
+      setForm({ rol: 'MEDICO', nombre: '', email: '', password: '', cedula: '', consultorio: '' });
     }
+    setErrores({});
+    setErrorGeneral('');
   }, [abierto, datosIniciales]);
 
   if (!abierto) return null;
@@ -42,11 +38,11 @@ export function ModalNuevoUsuario({ abierto, onCerrar, onCreado, datosIniciales 
     const nuevosErrores = {};
     if (!form.nombre.trim()) nuevosErrores.nombre = 'El nombre es obligatorio.';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) nuevosErrores.email = 'Correo inválido.';
-    if (!editando) {
-      if (!PASSWORD_REGEX.test(form.password)) {
-        nuevosErrores.password = 'Mínimo 8 caracteres, una mayúscula, un número y un carácter especial.';
-      }
-    } else if (form.password && !PASSWORD_REGEX.test(form.password)) {
+    const passwordObligatoria = !editando;
+    if (passwordObligatoria && !PASSWORD_REGEX.test(form.password)) {
+      nuevosErrores.password = 'Mínimo 8 caracteres, una mayúscula, un número y un carácter especial.';
+    }
+    if (editando && form.password && !PASSWORD_REGEX.test(form.password)) {
       nuevosErrores.password = 'Mínimo 8 caracteres, una mayúscula, un número y un carácter especial.';
     }
     setErrores(nuevosErrores);
@@ -61,11 +57,12 @@ export function ModalNuevoUsuario({ abierto, onCerrar, onCreado, datosIniciales 
     setCargando(true);
     try {
       if (editando) {
-        await axiosClient.put(`/admin/usuarios/${datosIniciales.id}`, form);
+        await axiosClient.put(`/admin/usuarios/${datosIniciales.id}`, {
+          nombre: form.nombre, email: form.email, password: form.password || undefined,
+        });
       } else {
         await axiosClient.post('/admin/usuarios', form);
       }
-      setForm({ rol: 'MEDICO', nombre: '', email: '', password: '', cedula: '', consultorio: '' });
       onCreado();
     } catch (error) {
       setErrorGeneral(error.response?.data?.mensaje || 'No se pudo guardar el usuario.');
@@ -80,7 +77,9 @@ export function ModalNuevoUsuario({ abierto, onCerrar, onCreado, datosIniciales 
         <div className="px-6 py-5 border-b border-line flex items-start justify-between gap-4">
           <div>
             <h2 id="modal-alta" className="text-base font-semibold">{editando ? 'Editar usuario' : 'Nuevo usuario'}</h2>
-            <p className="mt-1 text-sm text-muted">{editando ? 'Actualiza los datos del usuario.' : 'La cuenta y el perfil se crean en una sola operación.'}</p>
+            <p className="mt-1 text-sm text-muted">
+              {editando ? 'El rol no se puede cambiar desde aquí.' : 'La cuenta y el perfil se crean en una sola operación.'}
+            </p>
           </div>
           <button type="button" onClick={onCerrar} className="shrink-0 text-muted hover:text-ink" aria-label="Cerrar">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
@@ -90,17 +89,26 @@ export function ModalNuevoUsuario({ abierto, onCerrar, onCreado, datosIniciales 
         </div>
 
         <form id={ID_FORMULARIO} onSubmit={manejarEnvio} className="p-6 space-y-5" noValidate>
-          <div>
-            <label htmlFor="rol" className="block text-xs font-semibold uppercase tracking-[0.06em] text-muted mb-2">Rol</label>
-            <select
-              id="rol" value={form.rol} onChange={(e) => actualizar('rol', e.target.value)}
-              className="w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink focus:border-brand-700 focus:ring-2 focus:ring-brand-700/25 focus:outline-none"
-            >
-              <option value="MEDICO">Médico</option>
-              <option value="PACIENTE">Paciente</option>
-              <option value="ADMIN">Administrador</option>
-            </select>
-          </div>
+          {editando ? (
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-[0.06em] text-muted mb-2">Rol</label>
+              <p className="rounded-lg border border-line bg-subtle px-3 py-2.5 text-sm text-ink">
+                {ETIQUETAS_ROL[form.rol] || form.rol}
+              </p>
+            </div>
+          ) : (
+            <div>
+              <label htmlFor="rol" className="block text-xs font-semibold uppercase tracking-[0.06em] text-muted mb-2">Rol</label>
+              <select
+                id="rol" value={form.rol} onChange={(e) => actualizar('rol', e.target.value)}
+                className="w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink focus:border-brand-700 focus:ring-2 focus:ring-brand-700/25 focus:outline-none"
+              >
+                <option value="MEDICO">Médico</option>
+                <option value="PACIENTE">Paciente</option>
+                <option value="ADMIN">Administrador</option>
+              </select>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-5">
             <div className="col-span-2">
@@ -131,7 +139,7 @@ export function ModalNuevoUsuario({ abierto, onCerrar, onCreado, datosIniciales 
               {errores.email && <p className="mt-2 text-xs text-urgente font-medium">{errores.email}</p>}
             </div>
 
-            {form.rol === 'MEDICO' && !editando && (
+            {!editando && form.rol === 'MEDICO' && (
               <>
                 <div>
                   <label htmlFor="cedula" className="block text-xs font-semibold uppercase tracking-[0.06em] text-muted mb-2">
@@ -158,7 +166,7 @@ export function ModalNuevoUsuario({ abierto, onCerrar, onCreado, datosIniciales 
 
             <div className="col-span-2">
               <label htmlFor="password-nuevo" className="block text-xs font-semibold uppercase tracking-[0.06em] text-muted mb-2">
-                {editando ? 'Nueva contraseña (dejar vacío para mantener)' : 'Contraseña inicial'}
+                {editando ? 'Nueva contraseña (opcional)' : 'Contraseña inicial'}
               </label>
               <input
                 id="password-nuevo" type="password"
@@ -167,7 +175,9 @@ export function ModalNuevoUsuario({ abierto, onCerrar, onCreado, datosIniciales 
                   errores.password ? 'border-urgente focus:border-urgente focus:ring-urgente/25' : 'border-line focus:border-brand-700 focus:ring-brand-700/25'
                 }`}
               />
-              <p className="mt-2 text-xs text-muted">Mínimo 8 caracteres, una mayúscula, un número y un carácter especial.</p>
+              <p className="mt-2 text-xs text-muted">
+                {editando ? 'Déjala en blanco para no cambiarla.' : 'Mínimo 8 caracteres, una mayúscula, un número y un carácter especial.'}
+              </p>
               {errores.password && <p className="mt-1 text-xs text-urgente font-medium">{errores.password}</p>}
             </div>
           </div>
@@ -186,7 +196,7 @@ export function ModalNuevoUsuario({ abierto, onCerrar, onCreado, datosIniciales 
             type="submit" form={ID_FORMULARIO} disabled={cargando}
             className="rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-800 active:bg-brand-900 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 disabled:opacity-60"
           >
-            {cargando ? 'Guardando...' : editando ? 'Actualizar' : 'Crear usuario'}
+            {cargando ? 'Guardando...' : editando ? 'Guardar cambios' : 'Crear usuario'}
           </button>
         </div>
       </div>

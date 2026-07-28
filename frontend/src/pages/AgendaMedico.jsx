@@ -6,23 +6,9 @@ import Pagination from '../components/Pagination'
 import LoadingSpinner from '../components/LoadingSpinner'
 import EmptyState from '../components/EmptyState'
 import { Search, Zap, LoaderCircle } from 'lucide-react'
-import { listarCitasPorPaciente } from '../api/citaService'
+import { listarCitasPorMedico } from '../api/citaService'
 import { estimarCita } from '../api/estimacionService'
-
-// Datos mock mientras no exista el endpoint backend de agenda del médico
-const MOCK_CITAS = {
-  contenido: [
-    { id: 1, hora: '09:00', pacienteNombre: 'Rosa Elena Jiménez', edad: 42, motivo: 'Dolor torácico al esfuerzo', gravedad: 'URGENTE', duracion: 30, estado: 'ATENDIDA', pesoKg: 74.0, presionSistolica: 176, presionDiastolica: 104, contextoSalud: 'Hipertensión diagnosticada en 2020' },
-    { id: 2, hora: '10:30', pacienteNombre: 'Juan Pérez Ramírez', edad: 41, motivo: 'Dolor de cabeza persistente', gravedad: 'MODERADA', duracion: 20, estado: 'CONFIRMADA', pesoKg: 72.5, presionSistolica: 138, presionDiastolica: 88, contextoSalud: 'Diabetes tipo 2. Alergia a la penicilina.' },
-    { id: 3, hora: '11:00', pacienteNombre: 'Carmen Vásquez Toledo', edad: 29, motivo: 'Control de embarazo', gravedad: 'LEVE', duracion: 15, estado: 'CONFIRMADA', pesoKg: 64.0, presionSistolica: 118, presionDiastolica: 76, contextoSalud: 'Embarazo de 24 semanas. Sin complicaciones.' },
-    { id: 4, hora: '11:30', pacienteNombre: 'Ernesto Mendoza Sosa', edad: 67, motivo: 'Revisión de presión arterial', gravedad: null, duracion: null, estado: 'PENDIENTE', pesoKg: 81.0, presionSistolica: 142, presionDiastolica: 90, contextoSalud: 'Antecedente de hipertensión. Toma losartán.' },
-    { id: 5, hora: '12:30', pacienteNombre: 'Sofía Aguilar Nieto', edad: 8, motivo: 'Fiebre y tos', gravedad: 'MODERADA', duracion: 20, estado: 'CANCELADA', pesoKg: 28.0, presionSistolica: 110, presionDiastolica: 70, contextoSalud: 'Fiebre de 38.5°C desde hace 2 días.' },
-  ],
-  paginaActual: 0,
-  tamanoPagina: 10,
-  totalElementos: 9,
-  totalPaginas: 1,
-}
+import { obtenerMiPerfil } from '../api/medicoService'
 
 export default function AgendaMedico() {
   const [citas, setCitas] = useState(null)
@@ -35,43 +21,62 @@ export default function AgendaMedico() {
   const [page, setPage] = useState(0)
   const [estimando, setEstimando] = useState(false)
   const [estimacionResult, setEstimacionResult] = useState(null)
+  const [estimacionError, setEstimacionError] = useState(null)
 
   useEffect(() => {
-    setTimeout(() => {
-      setCitas(MOCK_CITAS)
-      setLoading(false)
-    }, 300)
-  }, [])
+    let activo = true
+    setLoading(true)
+    setError(null)
+    obtenerMiPerfil()
+      .then((medico) => listarCitasPorMedico(medico.id, page))
+      .then((data) => {
+        if (activo) setCitas(data)
+      })
+      .catch(() => {
+        if (activo) setError('No se pudo cargar la agenda del día.')
+      })
+      .finally(() => {
+        if (activo) setLoading(false)
+      })
+    return () => { activo = false }
+  }, [page])
 
   const handleSelect = useCallback((cita) => {
     setSeleccionada(cita)
     setEstimacionResult(null)
+    setEstimacionError(null)
   }, [])
 
   const handleEstimar = async () => {
     if (!seleccionada) return
     setEstimando(true)
     setEstimacionResult(null)
+    setEstimacionError(null)
     try {
       const res = await estimarCita(seleccionada.id)
       setEstimacionResult(res)
+      setCitas((prev) => prev && {
+        ...prev,
+        contenido: prev.contenido.map((c) =>
+          c.id === seleccionada.id ? { ...c, gravedad: res.gravedad, duracion: res.tiempoEstimadoMin } : c
+        ),
+      })
     } catch {
-      // Mock: simular respuesta IA
-      setTimeout(() => {
-        setEstimacionResult({
-          gravedad: 'MODERADA',
-          tiempoEstimadoMin: 20,
-          origen: 'IA',
-          justificacion: 'Presión arterial ligeramente elevada (138/88) en paciente con diabetes tipo 2. La cefalea persistente de 2 días sin respuesta a analgésico requiere exploración dirigida.',
-          createdAt: new Date().toLocaleString(),
-        })
-        setEstimando(false)
-      }, 1500)
+      setEstimacionError('No se pudo calcular la estimación. Intenta de nuevo.')
+    } finally {
+      setEstimando(false)
     }
   }
 
   if (loading) return <Layout title="Agenda del día"><LoadingSpinner /></Layout>
   if (error) return <Layout title="Agenda del día"><EmptyState title="Error" description={error} /></Layout>
+
+  const citasFiltradas = (citas?.contenido || []).filter((cita) => {
+    const coincideNombre = cita.pacienteNombre.toLowerCase().includes(buscador.toLowerCase())
+    const coincideEstado = filtroEstado === 'TODOS' || cita.estado === filtroEstado
+    const coincideFecha = !filtroFecha || cita.fechaHora.startsWith(filtroFecha)
+    return coincideNombre && coincideEstado && coincideFecha
+  })
 
   return (
       <Layout title="Agenda del día" subtitle={new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}>
@@ -106,8 +111,8 @@ export default function AgendaMedico() {
               </div>
             </div>
 
-            {citas.contenido.length === 0 ? (
-                <EmptyState title="Sin citas para hoy" description="No hay citas agendadas para esta fecha." />
+            {citasFiltradas.length === 0 ? (
+                <EmptyState title="Sin citas" description="No hay citas que coincidan con los filtros." />
             ) : (
                 <>
                   <div className="overflow-x-auto">
@@ -122,15 +127,17 @@ export default function AgendaMedico() {
                       </tr>
                       </thead>
                       <tbody>
-                      {citas.contenido.map((cita) => (
+                      {citasFiltradas.map((cita) => (
                           <tr key={cita.id} onClick={() => handleSelect(cita)}
                               className={`border-t border-line cursor-pointer transition-colors duration-150 ${
                                   seleccionada?.id === cita.id ? 'bg-brand-50' : 'hover:bg-subtle/60'
                               }`}>
-                            <td className="px-6 py-4 font-semibold tabular-nums">{cita.hora}</td>
+                            <td className="px-6 py-4 font-semibold tabular-nums">
+                              {new Date(cita.fechaHora).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+                            </td>
                             <td className="px-6 py-4">
                               <span className="block font-medium">{cita.pacienteNombre}</span>
-                              <span className="block text-xs text-muted">{cita.edad} años · {cita.motivo}</span>
+                              <span className="block text-xs text-muted">{cita.contextoSalud || 'Sin motivo registrado'}</span>
                             </td>
                             <td className="px-6 py-4"><GravedadBadge gravedad={cita.gravedad} /></td>
                             <td className="px-6 py-4 text-right tabular-nums">{cita.duracion ? `${cita.duracion} min` : '—'}</td>
@@ -153,20 +160,16 @@ export default function AgendaMedico() {
             ) : (
                 <>
                   <div className="px-6 py-5 border-b border-line">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">Cita seleccionada · {seleccionada.hora} h</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+                      Cita seleccionada · {new Date(seleccionada.fechaHora).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })} h
+                    </p>
                     <h2 className="mt-2 text-xl font-semibold tracking-[-0.02em]">{seleccionada.pacienteNombre}</h2>
-                    <p className="mt-1 text-sm text-muted">{seleccionada.edad} años · Expediente #{seleccionada.id}</p>
+                    <p className="mt-1 text-sm text-muted">Expediente #{seleccionada.id}</p>
                   </div>
 
                   <div className="px-6 py-5 border-b border-line">
-                    <h3 className="text-sm font-semibold">Motivo de la consulta</h3>
-                    <p className="mt-2 text-sm text-muted leading-6">{seleccionada.motivo}</p>
-                    {seleccionada.contextoSalud && (
-                        <>
-                          <h3 className="mt-5 text-sm font-semibold">Contexto de salud</h3>
-                          <p className="mt-2 text-sm text-muted leading-6">{seleccionada.contextoSalud}</p>
-                        </>
-                    )}
+                    <h3 className="text-sm font-semibold">Contexto de salud</h3>
+                    <p className="mt-2 text-sm text-muted leading-6">{seleccionada.contextoSalud || 'Sin notas registradas.'}</p>
                   </div>
 
                   <div className="px-6 py-5 border-b border-line">
@@ -192,17 +195,13 @@ export default function AgendaMedico() {
                         {estimando ? <LoaderCircle className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
                         {estimando ? 'Estimando...' : recibeEstimacionLabel(seleccionada.gravedad)}
                       </button>
+                      {estimacionError && <p className="mt-2 text-xs font-semibold text-urgente">{estimacionError}</p>}
                     </div>
                   </div>
 
                   {estimacionResult && (
                       <div className="px-6 py-5">
-                        <div className="flex items-center justify-between gap-4">
-                          <h3 className="text-sm font-semibold">Estimación de consulta</h3>
-                          <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-subtle px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.04em] text-muted">
-                      Origen: {estimacionResult.origen}
-                    </span>
-                        </div>
+                        <h3 className="text-sm font-semibold">Estimación de consulta</h3>
                         <div className="mt-4 grid grid-cols-2 gap-3">
                           <div className="rounded-lg bg-subtle px-4 py-3">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">Gravedad</p>
@@ -216,14 +215,8 @@ export default function AgendaMedico() {
                             </p>
                           </div>
                         </div>
-                        {estimacionResult.justificacion && (
-                            <>
-                              <h4 className="mt-5 text-xs font-semibold uppercase tracking-[0.06em] text-muted">Justificación</h4>
-                              <p className="mt-2 text-sm text-muted leading-6">{estimacionResult.justificacion}</p>
-                            </>
-                        )}
                         <p className="mt-5 pt-4 border-t border-line text-xs text-muted">
-                          Calculada el {estimacionResult.createdAt}. Es una referencia para ordenar la sala de espera, no un diagnóstico.
+                          Calculada el {new Date(estimacionResult.creadoEn).toLocaleString('es-MX')}. Es una referencia para ordenar la sala de espera, no un diagnóstico.
                         </p>
                       </div>
                   )}
@@ -236,8 +229,6 @@ export default function AgendaMedico() {
 }
 
 function recibeEstimacionLabel(gravedad) {
-  if (gravedad === 'URGENTE') return 'Recalcular estimación'
-  if (gravedad === 'MODERADA') return 'Recalcular estimación'
-  if (gravedad === 'LEVE') return 'Recalcular estimación'
+  if (gravedad) return 'Recalcular estimación'
   return 'Estimar con IA'
 }

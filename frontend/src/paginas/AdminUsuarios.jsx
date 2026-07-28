@@ -22,7 +22,7 @@ export default function AdminUsuarios() {
   const [filtroEstado, setFiltroEstado] = useState('');
 
   const [modalAbierto, setModalAbierto] = useState(false);
-  const [usuarioEditando, setUsuarioEditando] = useState(null);
+  const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
 
   const cargarUsuarios = useCallback(async () => {
     setCargando(true);
@@ -104,7 +104,7 @@ export default function AdminUsuarios() {
           accionPrimaria={
             <button
               type="button"
-              onClick={() => { setUsuarioEditando(null); setModalAbierto(true); }}
+              onClick={() => { setUsuarioSeleccionado(null); setModalAbierto(true); }}
               className="flex items-center gap-2 rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-brand-800 active:bg-brand-900 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5">
@@ -221,7 +221,7 @@ export default function AdminUsuarios() {
                               <div className="flex items-center justify-end gap-2">
                                 <button
                                   type="button"
-                                  onClick={() => { setUsuarioEditando(u); setModalAbierto(true); }}
+                                  onClick={() => { setUsuarioSeleccionado(u); setModalAbierto(true); }}
                                   className="rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-semibold text-muted hover:bg-subtle hover:text-ink transition-colors duration-150"
                                 >
                                   Editar
@@ -340,9 +340,9 @@ export default function AdminUsuarios() {
 
       <ModalNuevoUsuario
         abierto={modalAbierto}
-        onCerrar={() => { setModalAbierto(false); setUsuarioEditando(null); }}
-        onCreado={() => { setModalAbierto(false); setUsuarioEditando(null); cargarUsuarios(); }}
-        datosIniciales={usuarioEditando}
+        onCerrar={() => { setModalAbierto(false); setUsuarioSeleccionado(null); }}
+        onCreado={() => { setModalAbierto(false); setUsuarioSeleccionado(null); cargarUsuarios(); }}
+        datosIniciales={usuarioSeleccionado}
       />
     </div>
   );

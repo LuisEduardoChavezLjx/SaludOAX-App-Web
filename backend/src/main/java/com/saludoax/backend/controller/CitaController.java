@@ -5,11 +5,13 @@ import com.saludoax.backend.dto.EstimacionDTO;
 import com.saludoax.backend.dto.PageResponse;
 import com.saludoax.backend.service.CitaService;
 import com.saludoax.backend.service.EstimacionService;
+import com.saludoax.backend.service.SalaEsperaService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -20,10 +22,12 @@ public class CitaController {
 
     private final CitaService citaService;
     private final EstimacionService estimacionService;
+    private final SalaEsperaService salaEsperaService;
 
-    public CitaController(CitaService citaService, EstimacionService estimacionService) {
+    public CitaController(CitaService citaService, EstimacionService estimacionService, SalaEsperaService salaEsperaService) {
         this.citaService = citaService;
         this.estimacionService = estimacionService;
+        this.salaEsperaService = salaEsperaService;
     }
 
     // GET /api/citas?page=0&size=10&estado=PENDIENTE
@@ -57,8 +61,8 @@ public class CitaController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('PACIENTE','ADMIN')")
-    public ResponseEntity<CitaDTO> crear(@Valid @RequestBody CitaDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(citaService.crear(dto));
+    public ResponseEntity<CitaDTO> crear(@Valid @RequestBody CitaDTO dto, Authentication authentication) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(citaService.crear(dto, authentication.getName()));
     }
 
     @PatchMapping("/{id}/estado")
@@ -84,5 +88,19 @@ public class CitaController {
     @PreAuthorize("hasAnyRole('ADMIN','MEDICO','PACIENTE')")
     public ResponseEntity<EstimacionDTO> obtenerEstimacion(@PathVariable Long id) {
         return ResponseEntity.ok(estimacionService.obtenerPorCita(id));
+    }
+
+    @PostMapping("/{id}/turno/iniciar")
+    @PreAuthorize("hasAnyRole('ADMIN','MEDICO')")
+    public ResponseEntity<Void> iniciarTurno(@PathVariable Long id) {
+        salaEsperaService.iniciar(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/turno/finalizar")
+    @PreAuthorize("hasAnyRole('ADMIN','MEDICO')")
+    public ResponseEntity<Void> finalizarTurno(@PathVariable Long id) {
+        salaEsperaService.finalizar(id);
+        return ResponseEntity.ok().build();
     }
 }

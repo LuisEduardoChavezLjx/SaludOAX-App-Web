@@ -42,9 +42,6 @@ public class AdminService {
 
     @Transactional
     public UsuarioAdminDTO crearUsuario(CrearUsuarioRequest request) {
-        if (request.getPassword() == null || request.getPassword().isBlank()) {
-            throw new IllegalArgumentException("La contraseña es obligatoria");
-        }
         if (usuarioRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Ya existe un usuario con ese email");
         }
@@ -82,63 +79,13 @@ public class AdminService {
     }
 
     @Transactional
-    public UsuarioAdminDTO actualizarUsuario(Long id, CrearUsuarioRequest request) {
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
-
-        // Verificar email único si cambia
-        if (request.getEmail() != null && !request.getEmail().equals(usuario.getEmail())) {
-            if (usuarioRepository.existsByEmail(request.getEmail())) {
-                throw new IllegalArgumentException("Ya existe un usuario con ese email");
-            }
-            usuario.setEmail(request.getEmail());
+    public void desactivarUsuario(Long id, String emailSolicitante) {
+        Usuario solicitante = usuarioRepository.findByEmail(emailSolicitante)
+                .orElseThrow(() -> new IllegalStateException("Usuario autenticado no encontrado"));
+        if (solicitante.getId().equals(id)) {
+            throw new IllegalArgumentException("No puedes desactivar tu propia cuenta");
         }
 
-        if (request.getNombre() != null) {
-            usuario.setNombre(request.getNombre());
-        }
-        if (request.getPassword() != null && !request.getPassword().isBlank()) {
-            usuario.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        }
-        if (request.getRol() != null) {
-            Rol rol = rolRepository.findByNombre(request.getRol())
-                    .orElseThrow(() -> new IllegalArgumentException("Rol inválido: " + request.getRol()));
-            usuario.setRol(rol);
-        }
-
-        usuarioRepository.save(usuario);
-
-        if (request.getRol() != null) {
-            // Al cambiar rol, actualizar o crear el perfil correspondiente
-            switch (request.getRol()) {
-                case "MEDICO" -> {
-                    if (!medicoRepository.existsById(usuario.getId())) {
-                        Medico medico = new Medico();
-                        medico.setUsuario(usuario);
-                        medico.setNombre(usuario.getNombre());
-                        medico.setEspecialidad("Medicina General");
-                        medico.setCedula(request.getCedula());
-                        medico.setConsultorio(request.getConsultorio());
-                        medicoRepository.save(medico);
-                    }
-                }
-                case "PACIENTE" -> {
-                    if (!pacienteRepository.existsById(usuario.getId())) {
-                        Paciente paciente = new Paciente();
-                        paciente.setUsuario(usuario);
-                        paciente.setNombre(usuario.getNombre());
-                        pacienteRepository.save(paciente);
-                    }
-                }
-            }
-        }
-
-        return new UsuarioAdminDTO(usuario.getId(), usuario.getEmail(), usuario.getNombre(),
-                usuario.getRol().getNombre(), usuario.getActivo());
-    }
-
-    @Transactional
-    public void desactivarUsuario(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
         usuario.setActivo(false);
@@ -151,6 +98,50 @@ public class AdminService {
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
         usuario.setActivo(true);
         usuarioRepository.save(usuario);
+    }
+
+    @Transactional
+    public UsuarioAdminDTO actualizarUsuario(Long id, ActualizarUsuarioRequest request) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        if (!usuario.getEmail().equalsIgnoreCase(request.getEmail())
+                && usuarioRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Ya existe un usuario con ese email");
+        }
+
+        usuario.setNombre(request.getNombre());
+        usuario.setEmail(request.getEmail());
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            usuario.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        }
+        usuarioRepository.save(usuario);
+
+        switch (usuario.getRol().getNombre()) {
+            case "MEDICO" -> medicoRepository.findByUsuarioId(usuario.getId())
+                    .ifPresent(m -> m.setNombre(request.getNombre()));
+            case "PACIENTE" -> pacienteRepository.findByUsuarioId(usuario.getId())
+                    .ifPresent(p -> p.setNombre(request.getNombre()));
+        }
+
+        return new UsuarioAdminDTO(usuario.getId(), usuario.getEmail(), usuario.getNombre(),
+                usuario.getRol().getNombre(), usuario.getActivo());
+    }
+
+    @Transactional
+    public void desactivarMedico(Long medicoId) {
+        Medico medico = medicoRepository.findById(medicoId)
+                .orElseThrow(() -> new IllegalArgumentException("Médico no encontrado"));
+        medico.getUsuario().setActivo(false);
+        usuarioRepository.save(medico.getUsuario());
+    }
+
+    @Transactional
+    public void reactivarMedico(Long medicoId) {
+        Medico medico = medicoRepository.findById(medicoId)
+                .orElseThrow(() -> new IllegalArgumentException("Médico no encontrado"));
+        medico.getUsuario().setActivo(true);
+        usuarioRepository.save(medico.getUsuario());
     }
 
     @Transactional(readOnly = true)

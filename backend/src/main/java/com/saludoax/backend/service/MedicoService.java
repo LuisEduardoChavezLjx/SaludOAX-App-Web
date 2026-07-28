@@ -1,6 +1,7 @@
 package com.saludoax.backend.service;
 
 import com.saludoax.backend.dto.EspecialidadSimpleDTO;
+import com.saludoax.backend.dto.HorarioDTO;
 import com.saludoax.backend.dto.MedicoDTO;
 import com.saludoax.backend.model.Medico;
 import com.saludoax.backend.repository.MedicoRepository;
@@ -42,7 +43,10 @@ public class MedicoService {
         var especialidades = m.getEspecialidades().stream()
                 .map(e -> new EspecialidadSimpleDTO(e.getId(), e.getNombre()))
                 .toList();
+        var horarios = m.getHorarios().stream()
+                .map(h -> new HorarioDTO(h.getDiaSemana(), h.getHoraInicio().toString(), h.getHoraFin().toString()))
+                .toList();
         return new MedicoDTO(m.getId(), m.getNombre(), m.getEspecialidad(), m.getConsultorio(),
-                m.getDisponible(), especialidades);
+                m.getDisponible(), especialidades, horarios);
     }
 }

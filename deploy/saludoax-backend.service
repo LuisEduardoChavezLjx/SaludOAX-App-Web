@@ -1,0 +1,17 @@
+[Unit]
+Description=SaludOAX Backend (Spring Boot)
+After=network.target docker.service
+
+[Service]
+Type=simple
+User=raciel-azure
+WorkingDirectory=/home/raciel-azure/saludoax/app
+EnvironmentFile=/home/raciel-azure/saludoax/app/app.env
+Environment=SPRING_PROFILES_ACTIVE=prod
+ExecStart=/usr/bin/java -jar /home/raciel-azure/saludoax/app/backend.jar
+SuccessExitStatus=143
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

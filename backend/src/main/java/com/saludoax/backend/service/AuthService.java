@@ -96,7 +96,7 @@ public class AuthService {
         pacienteRepository.save(paciente);
 
         String token = jwtUtil.generateToken(usuario.getEmail(), rol.getNombre());
-        return new AuthResponse(token, usuario.getEmail(), rol.getNombre());
+        return new AuthResponse(token, usuario.getEmail(), rol.getNombre(), usuario.getNombre());
     }
 
     private String deriveNombreDeEmail(String email) {
@@ -113,7 +113,7 @@ public class AuthService {
                 .orElseThrow(() -> new IllegalArgumentException("Credenciales invalidas"));
 
         String token = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().getNombre());
-        return new AuthResponse(token, usuario.getEmail(), usuario.getRol().getNombre());
+        return new AuthResponse(token, usuario.getEmail(), usuario.getRol().getNombre(), usuario.getNombre());
     }
 
     public void logout(String bearerToken) {
