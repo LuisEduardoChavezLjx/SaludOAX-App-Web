@@ -16,15 +16,19 @@ export async function obtenerMedico(id) {
 }
 
 export async function crearMedico(datos) {
-  const { data } = await axiosClient.post('/medicos', datos)
+  const { data } = await axiosClient.post('/admin/medicos', datos)
   return data
 }
 
 export async function actualizarMedico(id, datos) {
-  const { data } = await axiosClient.put(`/medicos/${id}`, datos)
+  const { data } = await axiosClient.put(`/admin/medicos/${id}`, datos)
   return data
 }
 
-export async function eliminarMedico(id) {
-  await axiosClient.delete(`/medicos/${id}`)
+export async function desactivarMedico(id) {
+  await axiosClient.patch(`/admin/medicos/${id}/desactivar`)
+}
+
+export async function reactivarMedico(id) {
+  await axiosClient.patch(`/admin/medicos/${id}/reactivar`)
 }
