@@ -10,15 +10,17 @@ public class MedicoDTO {
     private String consultorio;
     private Boolean disponible;
     private List<EspecialidadSimpleDTO> especialidades;
+    private List<HorarioDTO> horarios;
 
     public MedicoDTO(Long id, String nombre, String especialidad, String consultorio,
-                      Boolean disponible, List<EspecialidadSimpleDTO> especialidades) {
+                      Boolean disponible, List<EspecialidadSimpleDTO> especialidades, List<HorarioDTO> horarios) {
         this.id = id;
         this.nombre = nombre;
         this.especialidad = especialidad;
         this.consultorio = consultorio;
         this.disponible = disponible;
         this.especialidades = especialidades;
+        this.horarios = horarios;
     }
 
     public Long getId() { return id; }
@@ -27,4 +29,5 @@ public class MedicoDTO {
     public String getConsultorio() { return consultorio; }
     public Boolean getDisponible() { return disponible; }
     public List<EspecialidadSimpleDTO> getEspecialidades() { return especialidades; }
+    public List<HorarioDTO> getHorarios() { return horarios; }
 }

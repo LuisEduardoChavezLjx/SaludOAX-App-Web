@@ -7,13 +7,38 @@ import Layout from '../components/Layout'
 import { useNavigate } from 'react-router-dom'
 import { CalendarPlus, Stethoscope, Calendar, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react'
 
+const DIAS_SEMANA = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO']
+const DURACION_SLOT_MIN = 30
+
+function generarSlots(horarios, diaSemana, fecha) {
+  const delDia = horarios.filter((h) => h.diaSemana === diaSemana)
+  const ahora = new Date()
+  const esHoy = fecha === ahora.toISOString().slice(0, 10)
+  const slots = []
+
+  for (const h of delDia) {
+    let [horas, minutos] = h.horaInicio.slice(0, 5).split(':').map(Number)
+    const [horaFinH, horaFinM] = h.horaFin.slice(0, 5).split(':').map(Number)
+    while (horas < horaFinH || (horas === horaFinH && minutos < horaFinM)) {
+      const etiqueta = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`
+      if (!esHoy || horas > ahora.getHours() || (horas === ahora.getHours() && minutos > ahora.getMinutes())) {
+        slots.push(etiqueta)
+      }
+      minutos += DURACION_SLOT_MIN
+      if (minutos >= 60) { minutos -= 60; horas += 1 }
+    }
+  }
+  return slots
+}
+
 export default function AgendarCita() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [medicos, setMedicos] = useState([])
   const [form, setForm] = useState({
     medicoId: '',
-    fechaHora: '',
+    fecha: '',
+    hora: '',
   })
   const [errors, setErrors] = useState({})
   const [serverError, setServerError] = useState('')
@@ -45,15 +70,26 @@ export default function AgendarCita() {
   }
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-    if (errors[e.target.name]) setErrors((e) => ({ ...e, [e.target.name]: '' }))
+    const { name, value } = e.target
+    setForm((f) => ({
+      ...f,
+      [name]: value,
+      ...(name === 'medicoId' || name === 'fecha' ? { hora: '' } : {}),
+    }))
+    if (errors[name]) setErrors((er) => ({ ...er, [name]: '' }))
   }
+
+  const medicoSeleccionado = medicos.find((m) => String(m.id) === form.medicoId)
+  const diaSemana = form.fecha ? DIAS_SEMANA[new Date(`${form.fecha}T00:00:00`).getDay()] : null
+  const slotsDisponibles = medicoSeleccionado && diaSemana
+    ? generarSlots(medicoSeleccionado.horarios || [], diaSemana, form.fecha)
+    : []
 
   const validate = () => {
     const newErrors = {}
     if (!form.medicoId) newErrors.medicoId = 'Selecciona un médico'
-    if (!form.fechaHora) newErrors.fechaHora = 'Selecciona fecha y hora'
-    else if (new Date(form.fechaHora) <= new Date()) newErrors.fechaHora = 'La fecha debe ser futura'
+    if (!form.fecha) newErrors.fecha = 'Selecciona una fecha'
+    if (!form.hora) newErrors.hora = 'Selecciona un horario disponible'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -68,10 +104,10 @@ export default function AgendarCita() {
     try {
       await crearCita({
         medicoId: Number(form.medicoId),
-        fechaHora: form.fechaHora,
+        fechaHora: `${form.fecha}T${form.hora}`,
       })
       setSuccess(true)
-      setForm({ medicoId: '', fechaHora: '' })
+      setForm({ medicoId: '', fecha: '', hora: '' })
     } catch (err) {
       setServerError(err.response?.data?.mensaje || 'No se pudo agendar la cita.')
     } finally {
@@ -97,7 +133,7 @@ export default function AgendarCita() {
             </div>
           )}
 
-          {serverError && !form.medicoId && !form.fechaHora && loading === false && (
+          {serverError && !form.medicoId && !form.fecha && loading === false && (
             <div className="mb-6 flex items-center gap-3 rounded-xl border border-urgente/30 bg-urgente/5 px-4 py-3 text-sm text-urgente">
               <AlertCircle className="w-5 h-5 shrink-0" />
               {serverError}
@@ -139,21 +175,48 @@ export default function AgendarCita() {
               </div>
 
               <div>
-                <label htmlFor="fechaHora" className="label">Fecha y hora</label>
+                <label htmlFor="fecha" className="label">Fecha</label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
                   <input
-                    id="fechaHora"
-                    name="fechaHora"
-                    type="datetime-local"
-                    value={form.fechaHora}
+                    id="fecha"
+                    name="fecha"
+                    type="date"
+                    min={new Date().toISOString().slice(0, 10)}
+                    value={form.fecha}
                     onChange={handleChange}
+                    disabled={!form.medicoId}
                     className="input-field pl-10"
                     required
                   />
                 </div>
-                {errors.fechaHora && (
-                  <p className="mt-1.5 text-xs font-semibold text-urgente">{errors.fechaHora}</p>
+                {errors.fecha && (
+                  <p className="mt-1.5 text-xs font-semibold text-urgente">{errors.fecha}</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="hora" className="label">Hora</label>
+                <select
+                  id="hora"
+                  name="hora"
+                  value={form.hora}
+                  onChange={handleChange}
+                  disabled={!form.fecha || slotsDisponibles.length === 0}
+                  className="input-field appearance-none bg-white"
+                  required
+                >
+                  <option value="">
+                    {form.fecha
+                      ? (slotsDisponibles.length ? '-- Selecciona un horario --' : 'Sin horarios disponibles ese día')
+                      : 'Selecciona primero una fecha'}
+                  </option>
+                  {slotsDisponibles.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+                {errors.hora && (
+                  <p className="mt-1.5 text-xs font-semibold text-urgente">{errors.hora}</p>
                 )}
               </div>
 

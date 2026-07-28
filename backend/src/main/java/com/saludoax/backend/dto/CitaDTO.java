@@ -13,7 +13,6 @@ public class CitaDTO {
 
     private Long id;
 
-    @NotNull(message = "El paciente es obligatorio")
     private Long pacienteId;
 
     private String pacienteNombre;

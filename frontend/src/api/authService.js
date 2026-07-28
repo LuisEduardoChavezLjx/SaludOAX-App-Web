@@ -4,7 +4,7 @@ export async function login(email, password) {
   try {
     const { data } = await axiosClient.post('/auth/login', { email, password })
     localStorage.setItem('saludoax_token', data.token)
-    localStorage.setItem('saludoax_user', JSON.stringify({ email: data.email, rol: data.rol }))
+    localStorage.setItem('saludoax_user', JSON.stringify({ email: data.email, rol: data.rol, nombre: data.nombre }))
     return data
   } catch (error) {
     if (!error.response) {
@@ -17,7 +17,7 @@ export async function login(email, password) {
 export async function register(email, password) {
   const { data } = await axiosClient.post('/auth/register', { email, password })
   localStorage.setItem('saludoax_token', data.token)
-  localStorage.setItem('saludoax_user', JSON.stringify({ email: data.email, rol: data.rol }))
+  localStorage.setItem('saludoax_user', JSON.stringify({ email: data.email, rol: data.rol, nombre: data.nombre }))
   return data
 }
 

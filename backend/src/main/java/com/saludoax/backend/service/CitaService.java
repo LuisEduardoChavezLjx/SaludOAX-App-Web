@@ -5,9 +5,11 @@ import com.saludoax.backend.model.Cita;
 import com.saludoax.backend.model.EstadoCita;
 import com.saludoax.backend.model.Medico;
 import com.saludoax.backend.model.Paciente;
+import com.saludoax.backend.model.Usuario;
 import com.saludoax.backend.repository.CitaRepository;
 import com.saludoax.backend.repository.MedicoRepository;
 import com.saludoax.backend.repository.PacienteRepository;
+import com.saludoax.backend.repository.UsuarioRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,11 +24,14 @@ public class CitaService {
     private final CitaRepository citaRepository;
     private final PacienteRepository pacienteRepository;
     private final MedicoRepository medicoRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    public CitaService(CitaRepository citaRepository, PacienteRepository pacienteRepository, MedicoRepository medicoRepository) {
+    public CitaService(CitaRepository citaRepository, PacienteRepository pacienteRepository,
+                        MedicoRepository medicoRepository, UsuarioRepository usuarioRepository) {
         this.citaRepository = citaRepository;
         this.pacienteRepository = pacienteRepository;
         this.medicoRepository = medicoRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     public Page<CitaDTO> listar(String estado, Pageable pageable) {
@@ -49,7 +54,15 @@ public class CitaService {
     }
 
     @Transactional
-    public CitaDTO crear(CitaDTO dto) {
+    public CitaDTO crear(CitaDTO dto, String emailAutenticado) {
+        if (dto.getPacienteId() == null) {
+            Usuario usuario = usuarioRepository.findByEmail(emailAutenticado)
+                    .orElseThrow(() -> new IllegalStateException("Usuario autenticado no encontrado"));
+            Paciente propio = pacienteRepository.findByUsuarioId(usuario.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("No tienes perfil de paciente"));
+            dto.setPacienteId(propio.getId());
+        }
+
         Paciente paciente = pacienteRepository.findById(dto.getPacienteId())
                 .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado"));
         Medico medico = medicoRepository.findById(dto.getMedicoId())

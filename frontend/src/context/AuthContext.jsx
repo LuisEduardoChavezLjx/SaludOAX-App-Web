@@ -11,7 +11,7 @@ export function AuthProvider({ children }) {
     setCargando(true)
     try {
       const data = await authService.login(email, password)
-      setUser({ email: data.email, rol: data.rol })
+      setUser({ email: data.email, rol: data.rol, nombre: data.nombre })
       return data
     } finally {
       setCargando(false)
@@ -22,7 +22,7 @@ export function AuthProvider({ children }) {
     setCargando(true)
     try {
       const data = await authService.register(email, password)
-      setUser({ email: data.email, rol: data.rol })
+      setUser({ email: data.email, rol: data.rol, nombre: data.nombre })
       return data
     } finally {
       setCargando(false)
