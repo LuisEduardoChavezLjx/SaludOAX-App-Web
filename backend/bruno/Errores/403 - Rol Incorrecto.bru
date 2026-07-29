@@ -1,0 +1,34 @@
+meta {
+  name: 403 - Rol Incorrecto
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/admin/medicos
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{tokenPaciente}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "nombre": "Dr Prueba",
+    "email": "drprueba@saludoax.com",
+    "cedula": "CED-999",
+    "consultorio": "C1"
+  }
+}
+
+tests {
+  test("status is 403", function() {
+    expect(res.getStatus()).to.equal(403);
+  });
+  test("mensaje de permiso denegado", function() {
+    expect(res.body.mensaje).to.equal("No tienes permiso para realizar esta accion");
+  });
+}

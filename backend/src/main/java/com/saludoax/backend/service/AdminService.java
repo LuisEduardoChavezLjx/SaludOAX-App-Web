@@ -15,6 +15,8 @@ import java.util.List;
 @Service
 public class AdminService {
 
+    private static final String ESPECIALIDAD_DEFAULT = "Medicina General";
+
     private final UsuarioRepository usuarioRepository;
     private final MedicoRepository medicoRepository;
     private final PacienteRepository pacienteRepository;
@@ -61,7 +63,7 @@ public class AdminService {
                 Medico medico = new Medico();
                 medico.setUsuario(usuario);
                 medico.setNombre(request.getNombre());
-                medico.setEspecialidad("Medicina General");
+                medico.setEspecialidad(ESPECIALIDAD_DEFAULT);
                 medico.setCedula(request.getCedula());
                 medico.setConsultorio(request.getConsultorio());
                 medicoRepository.save(medico);
@@ -171,15 +173,12 @@ public class AdminService {
         medico.setNombre(request.getNombre());
         medico.setCedula(request.getCedula());
         medico.setConsultorio(request.getConsultorio());
-        medico.setEspecialidad("Medicina General");
 
-        if (request.getEspecialidades() != null) {
-            List<Especialidad> especialidades = especialidadRepository.findAllById(request.getEspecialidades());
-            medico.getEspecialidades().addAll(especialidades);
-            if (!especialidades.isEmpty()) {
-                medico.setEspecialidad(especialidades.get(0).getNombre());
-            }
-        }
+        List<Especialidad> especialidades = request.getEspecialidades() != null
+                ? especialidadRepository.findAllById(request.getEspecialidades())
+                : List.of();
+        medico.getEspecialidades().addAll(especialidades);
+        sincronizarEspecialidadPrincipal(medico, especialidades);
 
         if (request.getHorarios() != null) {
             request.getHorarios().forEach(h -> {
@@ -217,9 +216,7 @@ public class AdminService {
             List<Especialidad> especialidades = especialidadRepository.findAllById(request.getEspecialidades());
             medico.getEspecialidades().clear();
             medico.getEspecialidades().addAll(especialidades);
-            if (!especialidades.isEmpty()) {
-                medico.setEspecialidad(especialidades.get(0).getNombre());
-            }
+            sincronizarEspecialidadPrincipal(medico, especialidades);
         }
 
         if (request.getHorarios() != null) {
@@ -237,6 +234,12 @@ public class AdminService {
         usuarioRepository.save(usuario);
         medicoRepository.save(medico);
         return toMedicoAdminDTO(medico);
+    }
+
+    private void sincronizarEspecialidadPrincipal(Medico medico, List<Especialidad> especialidades) {
+        medico.setEspecialidad(especialidades == null || especialidades.isEmpty()
+                ? ESPECIALIDAD_DEFAULT
+                : especialidades.get(0).getNombre());
     }
 
     private MedicoAdminDTO toMedicoAdminDTO(Medico m) {

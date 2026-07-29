@@ -1,0 +1,24 @@
+meta {
+  name: Obtener Estimacion
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/citas/{{citaId}}/estimacion
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{tokenAdmin}}
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("la estimacion pertenece a la cita creada", function() {
+    expect(res.body.citaId).to.equal(bru.getVar("citaId"));
+  });
+}

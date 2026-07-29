@@ -29,7 +29,8 @@ public class FallbackEstimacionService implements IAEstimacionService {
         return new EstimacionResultado(gravedad, tiempoEstimadoMin);
     }
 
-    private Gravedad calcularGravedad(Cita cita) {
+
+    Gravedad calcularGravedad(Cita cita) {
         Integer sistolica = cita.getPresionSistolica();
         Integer diastolica = cita.getPresionDiastolica();
 

@@ -23,7 +23,14 @@ import java.util.Map;
 public class GroqEstimacionService implements IAEstimacionService {
 
     private static final Logger log = LoggerFactory.getLogger(GroqEstimacionService.class);
-    private static final Duration TIMEOUT = Duration.ofSeconds(8);
+
+    private static final Duration CONEXION_TIMEOUT = Duration.ofSeconds(2);
+    private static final Duration RESPUESTA_TIMEOUT = Duration.ofSeconds(6);
+
+    private static final String PROMPT_SISTEMA =
+            "Eres un asistente clinico de triage. Responde unicamente JSON con las claves " +
+            "\"gravedad\" (LEVE, MODERADA o URGENTE) y \"tiempoEstimadoMin\" " +
+            "(entero, minutos de consulta estimados).";
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -39,8 +46,8 @@ public class GroqEstimacionService implements IAEstimacionService {
         this.model = model;
 
         JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(
-                HttpClient.newBuilder().connectTimeout(TIMEOUT).build());
-        requestFactory.setReadTimeout(TIMEOUT);
+                HttpClient.newBuilder().connectTimeout(CONEXION_TIMEOUT).build());
+        requestFactory.setReadTimeout(RESPUESTA_TIMEOUT);
 
         this.restClient = RestClient.builder()
                 .baseUrl(apiUrl)
@@ -54,13 +61,7 @@ public class GroqEstimacionService implements IAEstimacionService {
                 "model", model,
                 "temperature", 0.2,
                 "response_format", Map.of("type", "json_object"),
-                "messages", List.of(
-                        Map.of("role", "system", "content",
-                                "Eres un asistente clinico de triage. Responde unicamente JSON con las claves " +
-                                "\"gravedad\" (LEVE, MODERADA o URGENTE) y \"tiempoEstimadoMin\" " +
-                                "(entero, minutos de consulta estimados)."),
-                        Map.of("role", "user", "content", construirPrompt(cita))
-                )
+                "messages", construirMensajes(cita)
         );
 
         String respuesta = restClient.post()
@@ -72,18 +73,28 @@ public class GroqEstimacionService implements IAEstimacionService {
         return parsearRespuesta(respuesta);
     }
 
-    private String construirPrompt(Cita cita) {
+    private List<Map<String, Object>> construirMensajes(Cita cita) {
+        return List.of(
+                Map.of("role", "system", "content", PROMPT_SISTEMA),
+                Map.of("role", "user", "content", construirPromptUsuario(cita))
+        );
+    }
+
+    private String construirPromptUsuario(Cita cita) {
         Integer edad = cita.getPaciente().getFechaNacimiento() != null
                 ? Period.between(cita.getPaciente().getFechaNacimiento(), LocalDate.now()).getYears()
                 : null;
+        String notasSalud = cita.getPaciente().getContextoSalud();
 
         return String.format(
-                "Edad: %s. Sexo: %s. Peso: %s kg. Presion arterial: %s/%s. Motivo de consulta: %s.",
+                "Edad: %s. Sexo: %s. Peso: %s kg. Presion arterial: %s/%s. " +
+                "Antecedentes y notas de salud del paciente: %s. Motivo de esta consulta: %s.",
                 edad != null ? edad : "desconocida",
                 cita.getPaciente().getSexo(),
                 cita.getPesoKg(),
                 cita.getPresionSistolica(),
                 cita.getPresionDiastolica(),
+                notasSalud != null && !notasSalud.isBlank() ? notasSalud : "sin antecedentes registrados",
                 cita.getContextoSalud() != null ? cita.getContextoSalud() : "sin especificar"
         );
     }
