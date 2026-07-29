@@ -16,7 +16,7 @@ public class WhatsappNotificacionService {
     private static final Logger log = LoggerFactory.getLogger(WhatsappNotificacionService.class);
 
     private static final String PREFIJO_WHATSAPP = "whatsapp:";
-    private static final String LADA_MEXICO = "+52";
+    private static final String PREFIJO_MOVIL_MEXICO_EN_WHATSAPP = "+521";
 
     private final String accountSid;
     private final String authToken;
@@ -66,6 +66,6 @@ public class WhatsappNotificacionService {
 
     private String aFormatoInternacional(String telefono) {
         String limpio = telefono.replaceAll("[^0-9+]", "");
-        return limpio.startsWith("+") ? limpio : LADA_MEXICO + limpio;
+        return limpio.startsWith("+") ? limpio : PREFIJO_MOVIL_MEXICO_EN_WHATSAPP + limpio;
     }
 }
