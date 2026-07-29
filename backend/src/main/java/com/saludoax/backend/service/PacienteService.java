@@ -50,6 +50,7 @@ public class PacienteService {
         return toDTO(paciente);
     }
 
+    @Transactional
     public PacienteDTO crear(String emailUsuarioAutenticado, PacienteDTO dto) {
         Usuario usuario = usuarioRepository.findByEmail(emailUsuarioAutenticado)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
@@ -63,15 +64,18 @@ public class PacienteService {
         aplicarCambios(paciente, dto);
 
         pacienteRepository.save(paciente);
+        usuarioRepository.save(usuario);
         return toDTO(paciente);
     }
 
+    @Transactional
     public PacienteDTO actualizar(Long id, PacienteDTO dto) {
         Paciente paciente = pacienteRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado"));
 
         aplicarCambios(paciente, dto);
         pacienteRepository.save(paciente);
+        usuarioRepository.save(paciente.getUsuario());
         return toDTO(paciente);
     }
 
@@ -84,6 +88,7 @@ public class PacienteService {
 
     private void aplicarCambios(Paciente paciente, PacienteDTO dto) {
         paciente.setNombre(dto.getNombre());
+        paciente.getUsuario().setNombre(dto.getNombre());
         paciente.setTelefono(dto.getTelefono());
         paciente.setPesoKg(dto.getPesoKg());
         paciente.setPresionSistolica(dto.getPresionSistolica());

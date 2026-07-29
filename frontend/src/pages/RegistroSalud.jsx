@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { crearPerfilPaciente, obtenerMiPerfil, actualizarPerfilPaciente, obtenerUltimosVitales } from '../api/pacienteService'
+import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
 import { Heart, Weight, AlertCircle, CheckCircle2, FileText, User, Calendar, Stethoscope } from 'lucide-react'
 
 export default function RegistroSalud() {
+  const { updateUser } = useAuth()
   const [form, setForm] = useState({
     nombre: '',
     telefono: '',
@@ -86,8 +88,16 @@ export default function RegistroSalud() {
 
       if (editando && perfilId) {
         await actualizarPerfilPaciente(perfilId, payload)
+        const stored = JSON.parse(localStorage.getItem('saludoax_user') || '{}')
+        stored.nombre = payload.nombre
+        localStorage.setItem('saludoax_user', JSON.stringify(stored))
+        updateUser({ nombre: payload.nombre })
       } else {
         await crearPerfilPaciente(payload)
+        const stored = JSON.parse(localStorage.getItem('saludoax_user') || '{}')
+        stored.nombre = payload.nombre
+        localStorage.setItem('saludoax_user', JSON.stringify(stored))
+        updateUser({ nombre: payload.nombre })
       }
       setSuccess(true)
     } catch (err) {

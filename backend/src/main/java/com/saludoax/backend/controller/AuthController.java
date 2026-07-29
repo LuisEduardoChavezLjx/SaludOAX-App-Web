@@ -44,9 +44,12 @@ public class AuthController {
 
     @PostMapping("/recuperar")
     public ResponseEntity<Map<String, String>> recuperar(@Valid @RequestBody RecuperarRequest request) {
-        authService.solicitarRecuperacion(request.getEmail());
-        return ResponseEntity.ok(Map.of(
-                "mensaje", "Si el correo existe, se enviaran instrucciones para restablecer la contrasena"));
+        boolean encontrado = authService.solicitarRecuperacion(request.getEmail());
+        if (encontrado) {
+            return ResponseEntity.ok(Map.of("mensaje", "Correo enviado, revisa tu bandeja de entrada o spam"));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("mensaje", "Usuario no encontrado en el sistema"));
     }
 
     @PostMapping("/restablecer")
