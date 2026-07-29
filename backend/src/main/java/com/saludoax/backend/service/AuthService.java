@@ -51,6 +51,7 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final TokenBlacklistRepository tokenBlacklistRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final EmailService emailService;
     private final SecureRandom secureRandom = new SecureRandom();
 
     public AuthService(UsuarioRepository usuarioRepository,
@@ -60,7 +61,8 @@ public class AuthService {
                        AuthenticationManager authenticationManager,
                        JwtUtil jwtUtil,
                        TokenBlacklistRepository tokenBlacklistRepository,
-                       PasswordResetTokenRepository passwordResetTokenRepository) {
+                       PasswordResetTokenRepository passwordResetTokenRepository,
+                       EmailService emailService) {
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
         this.pacienteRepository = pacienteRepository;
@@ -69,6 +71,7 @@ public class AuthService {
         this.jwtUtil = jwtUtil;
         this.tokenBlacklistRepository = tokenBlacklistRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -145,9 +148,9 @@ public class AuthService {
         tokenBlacklistRepository.save(new TokenBlacklist(usuario.getId(), jti, exp));
     }
 
-    public void solicitarRecuperacion(String email) {
+    public boolean solicitarRecuperacion(String email) {
         Optional<Usuario> encontrado = usuarioRepository.findByEmail(email);
-        if (encontrado.isEmpty()) return;
+        if (encontrado.isEmpty()) return false;
 
         Usuario usuario = encontrado.get();
         byte[] bytes = new byte[RESET_TOKEN_BYTES];
@@ -161,7 +164,8 @@ public class AuthService {
                 LocalDateTime.now().plusMinutes(RESET_TOKEN_TTL_MIN));
         passwordResetTokenRepository.save(registro);
 
-        log.info("[DEV] Token de recuperacion para {}: {}", email, tokenClaro);
+        emailService.enviarCorreoReset(email, tokenClaro);
+        return true;
     }
 
     @Transactional
