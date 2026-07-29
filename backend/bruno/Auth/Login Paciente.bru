@@ -1,0 +1,35 @@
+meta {
+  name: Login Paciente
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "paciente1@correo.com",
+    "password": "Paciente123!"
+  }
+}
+
+script:post-response {
+  bru.setVar("tokenPaciente", res.body.token);
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("rol es PACIENTE", function() {
+    expect(res.body.rol).to.equal("PACIENTE");
+  });
+}

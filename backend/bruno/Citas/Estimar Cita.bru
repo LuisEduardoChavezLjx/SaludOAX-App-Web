@@ -1,0 +1,25 @@
+meta {
+  name: Estimar Cita
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/citas/{{citaId}}/estimar
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{tokenMedico}}
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("devuelve gravedad y tiempo estimado", function() {
+    expect(["LEVE", "MODERADA", "URGENTE"]).to.include(res.body.gravedad);
+    expect(res.body.tiempoEstimadoMin).to.be.a("number");
+  });
+}

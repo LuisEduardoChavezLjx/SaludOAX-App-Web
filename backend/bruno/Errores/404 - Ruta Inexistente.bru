@@ -1,0 +1,21 @@
+meta {
+  name: 404 - Ruta Inexistente
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/no-existe
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{tokenAdmin}}
+}
+
+tests {
+  test("status is 404", function() {
+    expect(res.getStatus()).to.equal(404);
+  });
+}

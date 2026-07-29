@@ -1,0 +1,35 @@
+meta {
+  name: Login Medico
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "medico1@saludoax.com",
+    "password": "Medico123!"
+  }
+}
+
+script:post-response {
+  bru.setVar("tokenMedico", res.body.token);
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("rol es MEDICO", function() {
+    expect(res.body.rol).to.equal("MEDICO");
+  });
+}

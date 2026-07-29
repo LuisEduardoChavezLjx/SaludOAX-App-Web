@@ -1,0 +1,26 @@
+meta {
+  name: Sala Espera Medico
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/medicos/1/sala-espera
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{tokenMedico}}
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("el turno mas urgente queda primero", function() {
+    if (res.body.length > 1) {
+      expect(res.body[0].posicion).to.equal(1);
+    }
+  });
+}

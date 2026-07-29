@@ -1,0 +1,24 @@
+meta {
+  name: Listar Medicos
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/medicos
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{tokenPaciente}}
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("devuelve contenido paginado", function() {
+    expect(res.body.contenido).to.be.an("array");
+  });
+}

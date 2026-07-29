@@ -1,0 +1,46 @@
+meta {
+  name: Crear Cita
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/citas
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{tokenAdmin}}
+  Content-Type: application/json
+}
+
+script:pre-request {
+  const enDosDias = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+  bru.setVar("fechaFutura", enDosDias.toISOString().slice(0, 19));
+}
+
+body:json {
+  {
+    "pacienteId": 1,
+    "medicoId": 1,
+    "fechaHora": "{{fechaFutura}}",
+    "presionSistolica": 190,
+    "presionDiastolica": 125,
+    "pesoKg": 70,
+    "contextoSalud": "Dolor de pecho intenso"
+  }
+}
+
+script:post-response {
+  bru.setVar("citaId", res.body.id);
+}
+
+tests {
+  test("status is 201", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+  test("cita creada en estado PENDIENTE", function() {
+    expect(res.body.estado).to.equal("PENDIENTE");
+  });
+}
