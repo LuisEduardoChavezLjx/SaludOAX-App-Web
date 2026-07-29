@@ -3,6 +3,7 @@ package com.saludoax.backend.service;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -14,13 +15,18 @@ public class EmailService {
     private static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
     private final JavaMailSender mailSender;
+    private final String urlFrontend;
 
-    public EmailService(JavaMailSender mailSender) {
+    public EmailService(JavaMailSender mailSender,
+                        @Value("${app.frontend-url:http://localhost:5173}") String urlFrontend) {
         this.mailSender = mailSender;
+        this.urlFrontend = urlFrontend.endsWith("/")
+                ? urlFrontend.substring(0, urlFrontend.length() - 1)
+                : urlFrontend;
     }
 
     public void enviarCorreoReset(String destinatario, String token) {
-        String enlace = "http://localhost:5173/restablecer/" + token;
+        String enlace = urlFrontend + "/restablecer/" + token;
 
         try {
             MimeMessage mime = mailSender.createMimeMessage();

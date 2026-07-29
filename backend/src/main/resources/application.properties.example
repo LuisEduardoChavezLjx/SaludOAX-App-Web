@@ -36,6 +36,9 @@ spring.mail.password=TU_CONTRASENA_DE_APLICACION
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
 
+# Base del enlace que se manda en el correo de recuperacion
+app.frontend-url=http://localhost:5173
+
 # ========== TWILIO (WhatsApp / SMS) ==========
 twilio.account-sid=CAMBIA_ESTE_SID
 twilio.auth-token=CAMBIA_ESTE_TOKEN
