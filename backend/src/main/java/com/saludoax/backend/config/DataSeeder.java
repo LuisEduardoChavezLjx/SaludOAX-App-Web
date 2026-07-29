@@ -7,14 +7,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Carga datos de prueba solo si la base esta vacia.
- * Cumple el requisito de 10-15 registros por tabla principal,
- * incluyendo al menos un usuario por rol con credenciales documentadas
- * (ver README para las credenciales del admin de evaluacion).
- */
 @Component
 public class DataSeeder implements CommandLineRunner {
 
@@ -34,41 +30,50 @@ public class DataSeeder implements CommandLineRunner {
             "Control de crecimiento y vacunas"
     };
 
+    private static final String[] DIAS_LABORALES = {"LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES"};
+    private static final LocalTime INICIO_TURNO_MATUTINO = LocalTime.of(8, 0);
+    private static final LocalTime FIN_TURNO_MATUTINO = LocalTime.of(14, 0);
+    private static final LocalTime INICIO_TURNO_VESPERTINO = LocalTime.of(13, 0);
+    private static final LocalTime FIN_TURNO_VESPERTINO = LocalTime.of(19, 0);
+
     private final RolRepository rolRepository;
     private final UsuarioRepository usuarioRepository;
     private final PacienteRepository pacienteRepository;
     private final MedicoRepository medicoRepository;
     private final EspecialidadRepository especialidadRepository;
     private final CitaRepository citaRepository;
+    private final HorarioMedicoRepository horarioMedicoRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DataSeeder(RolRepository rolRepository, UsuarioRepository usuarioRepository,
                       PacienteRepository pacienteRepository, MedicoRepository medicoRepository,
                       EspecialidadRepository especialidadRepository, CitaRepository citaRepository,
-                      PasswordEncoder passwordEncoder) {
+                      HorarioMedicoRepository horarioMedicoRepository, PasswordEncoder passwordEncoder) {
         this.rolRepository = rolRepository;
         this.usuarioRepository = usuarioRepository;
         this.pacienteRepository = pacienteRepository;
         this.medicoRepository = medicoRepository;
         this.especialidadRepository = especialidadRepository;
         this.citaRepository = citaRepository;
+        this.horarioMedicoRepository = horarioMedicoRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public void run(String... args) {
-        if (usuarioRepository.count() > 1) {
-            return; // ya hay datos ademas del posible admin; no duplicar
+        if (usuarioRepository.count() <= 1) {
+            sembrarUsuariosPacientesMedicosYCitas();
         }
+        sembrarHorariosSiFaltan();
+    }
 
+    private void sembrarUsuariosPacientesMedicosYCitas() {
         Rol rolAdmin = rolRepository.findByNombre("ADMIN").orElseThrow();
         Rol rolPaciente = rolRepository.findByNombre("PACIENTE").orElseThrow();
         Rol rolMedico = rolRepository.findByNombre("MEDICO").orElseThrow();
 
-        // Usuario admin de evaluacion (credenciales documentadas en el README)
         crearUsuarioSiNoExiste("admin@saludoax.com", "Admin123!", rolAdmin);
 
-        // 10 pacientes de prueba
         for (int i = 1; i <= 10; i++) {
             Usuario u = crearUsuarioSiNoExiste("paciente" + i + "@correo.com", "Paciente123!", rolPaciente);
             if (pacienteRepository.findByUsuarioId(u.getId()).isEmpty()) {
@@ -86,10 +91,8 @@ public class DataSeeder implements CommandLineRunner {
             }
         }
 
-        // Especialidades ya vienen del seed SQL (migracion V7)
         List<Especialidad> especialidades = especialidadRepository.findAll();
 
-        // 5 medicos de prueba, cada uno con una especialidad asignada por N:M
         String[] nombresMedicos = {
                 "Dra. Ana Gomez", "Dr. Luis Ramirez", "Dra. Carmen Ruiz",
                 "Dr. Jorge Diaz", "Dra. Sofia Torres"
@@ -108,7 +111,6 @@ public class DataSeeder implements CommandLineRunner {
             }
         }
 
-        // 10 citas de prueba distribuidas entre pacientes y medicos
         List<Paciente> pacientes = pacienteRepository.findAll();
         List<Medico> medicos = medicoRepository.findAll();
         for (int i = 0; i < 10 && !pacientes.isEmpty() && !medicos.isEmpty(); i++) {
@@ -124,6 +126,29 @@ public class DataSeeder implements CommandLineRunner {
             c.setContextoSalud(pacienteDeLaCita.getContextoSalud());
             citaRepository.save(c);
         }
+    }
+
+    private void sembrarHorariosSiFaltan() {
+        if (horarioMedicoRepository.count() > 0) {
+            return;
+        }
+
+        List<Medico> medicos = medicoRepository.findAll();
+        List<HorarioMedico> horarios = new ArrayList<>();
+
+        for (int i = 0; i < medicos.size(); i++) {
+            boolean turnoMatutino = i % 2 == 0;
+            for (String dia : DIAS_LABORALES) {
+                HorarioMedico h = new HorarioMedico();
+                h.setMedico(medicos.get(i));
+                h.setDiaSemana(dia);
+                h.setHoraInicio(turnoMatutino ? INICIO_TURNO_MATUTINO : INICIO_TURNO_VESPERTINO);
+                h.setHoraFin(turnoMatutino ? FIN_TURNO_MATUTINO : FIN_TURNO_VESPERTINO);
+                horarios.add(h);
+            }
+        }
+
+        horarioMedicoRepository.saveAll(horarios);
     }
 
     private Usuario crearUsuarioSiNoExiste(String email, String password, Rol rol) {
