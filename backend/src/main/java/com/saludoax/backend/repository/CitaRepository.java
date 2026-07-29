@@ -28,4 +28,7 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     Optional<Cita> findFirstByPacienteIdAndEstadoInOrderByFechaHoraDesc(Long pacienteId, List<EstadoCita> estados);
 
     Optional<Cita> findFirstByPacienteIdAndEstadoInOrderByFechaHoraAsc(Long pacienteId, List<EstadoCita> estados);
+
+    @Query("SELECT c FROM Cita c JOIN FETCH c.paciente WHERE c.id = :id")
+    Optional<Cita> findByIdConPaciente(@Param("id") Long id);
 }
