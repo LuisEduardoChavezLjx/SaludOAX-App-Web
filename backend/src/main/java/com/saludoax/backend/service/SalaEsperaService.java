@@ -4,11 +4,14 @@ import com.saludoax.backend.dto.TurnoSalaEsperaDTO;
 import com.saludoax.backend.model.Cita;
 import com.saludoax.backend.model.EstadoCita;
 import com.saludoax.backend.model.EstadoTurno;
+import com.saludoax.backend.model.Medico;
 import com.saludoax.backend.model.TurnoSalaEspera;
 import com.saludoax.backend.repository.TurnoSalaEsperaProjection;
 import com.saludoax.backend.repository.TurnoSalaEsperaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 
@@ -20,9 +23,12 @@ public class SalaEsperaService {
             EstadoTurno.ESPERANDO.name(), EstadoTurno.EN_CONSULTA.name());
 
     private final TurnoSalaEsperaRepository turnoRepository;
+    private final WhatsappNotificacionService whatsappNotificacionService;
 
-    public SalaEsperaService(TurnoSalaEsperaRepository turnoRepository) {
+    public SalaEsperaService(TurnoSalaEsperaRepository turnoRepository,
+                             WhatsappNotificacionService whatsappNotificacionService) {
         this.turnoRepository = turnoRepository;
+        this.whatsappNotificacionService = whatsappNotificacionService;
     }
 
     public List<TurnoSalaEsperaDTO> listarPorMedico(Long medicoId) {
@@ -58,6 +64,27 @@ public class SalaEsperaService {
         turno.setEstado(EstadoTurno.FINALIZADO);
         turno.getCita().setEstado(EstadoCita.ATENDIDA);
         turnoRepository.save(turno);
+        notificarSiguienteEnFila(turno.getCita().getMedico());
+    }
+
+    private void notificarSiguienteEnFila(Medico medico) {
+        String medicoNombre = medico.getNombre();
+        turnoRepository.listarConTriageYPosicion(medico.getId(), List.of(EstadoTurno.ESPERANDO.name()))
+                .stream()
+                .findFirst()
+                .ifPresent(siguiente -> notificarTrasCommit(
+                        siguiente.getPacienteTelefono(),
+                        siguiente.getPacienteNombre(),
+                        medicoNombre));
+    }
+
+    private void notificarTrasCommit(String telefono, String pacienteNombre, String medicoNombre) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                whatsappNotificacionService.notificarTurnoListo(telefono, pacienteNombre, medicoNombre);
+            }
+        });
     }
 
     private TurnoSalaEspera buscarTurnoOFallar(Long citaId) {

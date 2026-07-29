@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 public interface TurnoSalaEsperaProjection {
     Long getCitaId();
     String getPacienteNombre();
+    String getPacienteTelefono();
     String getEstado();
     String getGravedad();
     Integer getPosicion();
