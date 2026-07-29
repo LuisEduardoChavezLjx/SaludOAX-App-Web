@@ -1,10 +1,6 @@
-spring.application.name=saludoax
+# ========== BASE ==========
+spring.application.name=saludoax-backend
 server.port=8080
-
-spring.datasource.url=jdbc:mysql://localhost:3306/saludoax?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Mexico_City
-spring.datasource.username=CAMBIA_ESTE_USUARIO
-spring.datasource.password=CAMBIA_ESTA_PASSWORD
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 
 spring.jpa.hibernate.ddl-auto=validate
 spring.jpa.open-in-view=false
@@ -12,18 +8,35 @@ spring.jpa.properties.hibernate.default_batch_fetch_size=16
 # spring.jpa.show-sql=true
 
 spring.flyway.enabled=true
-spring.flyway.locations=classpath:db/migration
 
+# ========== DATASOURCE ==========
+# Con docker-compose: usuario/password los defines en el archivo .env
+# Con XAMPP: usuario root y password vacio
+spring.datasource.url=jdbc:mysql://localhost:3306/saludoax?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.username=CAMBIA_ESTE_USUARIO
+spring.datasource.password=CAMBIA_ESTA_PASSWORD
+
+# ========== JWT (genera uno con: openssl rand -base64 48) ==========
 jwt.secret=CAMBIA_ESTE_SECRETO
 jwt.expiration-ms=1800000
 
+# ========== IA ==========
 app.ia.api-key=CAMBIA_ESTA_KEY
 app.ia.api-url=https://api.groq.com/openai/v1/chat/completions
 app.ia.model=llama-3.3-70b-versatile
 
-spring.mail.host=localhost
-spring.mail.port=25
+# ========== MAIL (SMTP Gmail) ==========
+# Crea un archivo application.properties (sin .example) con tus credenciales reales.
+# La password es una contrasena de aplicacion de Google, no la del correo.
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=TU_CORREO@gmail.com
+spring.mail.password=TU_CONTRASENA_DE_APLICACION
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
 
+# ========== TWILIO (WhatsApp / SMS) ==========
 twilio.account-sid=CAMBIA_ESTE_SID
 twilio.auth-token=CAMBIA_ESTE_TOKEN
 twilio.whatsapp-from=CAMBIA_ESTE_NUMERO

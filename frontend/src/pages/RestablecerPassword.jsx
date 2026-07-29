@@ -34,7 +34,7 @@ export default function RestablecerPassword() {
 
     setCargando(true);
     try {
-      await axiosClient.post('/auth/restablecer-password', { token, nuevaPassword: contrasena });
+      await axiosClient.post('/auth/restablecer', { token, nuevaPassword: contrasena });
       navegar('/login', { replace: true });
     } catch (error) {
       setErrorGeneral(error.response?.data?.mensaje || 'El enlace expiró o no es válido.');

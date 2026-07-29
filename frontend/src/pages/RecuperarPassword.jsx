@@ -5,19 +5,22 @@ import { LogoMarca } from '../componentes/comunes/LogoMarca';
 
 export default function RecuperarPassword() {
   const [email, setEmail] = useState('');
-  const [enviado, setEnviado] = useState(false);
+  const [mensaje, setMensaje] = useState('');
+  const [error, setError] = useState('');
   const [cargando, setCargando] = useState(false);
 
   async function manejarEnvio(evento) {
     evento.preventDefault();
+    setMensaje('');
+    setError('');
     setCargando(true);
     try {
-      await axiosClient.post('/auth/recuperar-password', { email: email.trim() });
-    } catch (error) {
-      // Intencional: no revelamos si el correo existe o no (anti-enumeración)
+      const { data } = await axiosClient.post('/auth/recuperar', { email: email.trim() });
+      setMensaje(data.mensaje);
+    } catch (err) {
+      setError(err.response?.data?.mensaje || 'Ocurrio un error, intenta mas tarde.');
     } finally {
       setCargando(false);
-      setEnviado(true);
     }
   }
 
@@ -51,11 +54,15 @@ export default function RecuperarPassword() {
           </button>
         </form>
 
-        {enviado && (
-          <div className="mt-6 rounded-lg bg-subtle px-4 py-3" role="status">
-            <p className="text-xs text-muted leading-5">
-              Si el correo existe en el sistema, enviaremos las instrucciones para restablecer la contraseña.
-            </p>
+        {mensaje && (
+          <div className="mt-6 rounded-lg bg-leve/10 border border-leve/30 px-4 py-3" role="status">
+            <p className="text-xs text-leve font-medium leading-5">{mensaje}</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="mt-6 rounded-lg bg-urgente/10 border border-urgente/30 px-4 py-3" role="alert">
+            <p className="text-xs text-urgente font-medium leading-5">{error}</p>
           </div>
         )}
 

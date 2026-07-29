@@ -19,7 +19,7 @@ este proyecto corre en Docker, aislado, en `127.0.0.1:3307` (nunca expuesto a in
 
 - `~/saludoax/db/.env`: `MYSQL_ROOT_PASSWORD`, `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`
 - `~/saludoax/app/app.env`: `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`,
-  `SPRING_DATASOURCE_PASSWORD`, `JWT_SECRET`, `APP_IA_API_KEY`
+  `SPRING_DATASOURCE_PASSWORD`, `JWT_SECRET`, `APP_IA_API_KEY`, `GMAIL_USER`, `GMAIL_PASS`
 
 ## Redeploy (cambios de código)
 
