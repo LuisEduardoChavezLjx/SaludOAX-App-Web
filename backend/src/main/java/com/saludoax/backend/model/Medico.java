@@ -22,8 +22,6 @@ public class Medico {
     @Column(nullable = false, length = 150)
     private String nombre;
 
-    // Especialidad principal (texto rapido para listados); el detalle real
-    // vive en la relacion N:M de abajo.
     @Column(nullable = false, length = 100)
     private String especialidad;
 
