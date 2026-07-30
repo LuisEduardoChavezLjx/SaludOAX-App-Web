@@ -16,7 +16,8 @@ public interface TurnoSalaEsperaRepository extends JpaRepository<TurnoSalaEspera
             "CASE e.gravedad WHEN 'URGENTE' THEN 0 WHEN 'MODERADA' THEN 1 WHEN 'LEVE' THEN 2 ELSE 3 END, t.hora_llegada";
 
     String SELECT_TURNOS_CON_TRIAGE =
-            "SELECT t.cita_id AS citaId, p.nombre AS pacienteNombre, t.estado AS estado, e.gravedad AS gravedad, " +
+            "SELECT t.cita_id AS citaId, p.nombre AS pacienteNombre, p.telefono AS pacienteTelefono, " +
+            "t.estado AS estado, e.gravedad AS gravedad, " +
             "ROW_NUMBER() OVER (ORDER BY " + ORDEN_TRIAGE + ") AS posicion, " +
             "CAST(COALESCE(SUM(COALESCE(e.tiempo_estimado_min, 15)) OVER (ORDER BY " + ORDEN_TRIAGE +
             " ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING), 0) AS SIGNED) AS minutosEsperaEstimados, " +

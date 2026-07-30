@@ -1,69 +1,109 @@
 # SaludOAX
 
-Sistema de gestión de citas médicas con estimación de tiempo de consulta y
-gravedad asistida por IA. Resuelve la incertidumbre que enfrentan los
-pacientes en clínicas donde no existe un tiempo estimado por consulta,
-evitando que pierdan su turno por ausentarse brevemente.
+Sistema de gestión de citas médicas para centros de salud del estado de Oaxaca, con estimación
+de tiempo de consulta y clasificación de gravedad asistida por IA.
+
+Resuelve un problema real: en clínicas sin tiempo estimado por consulta, los pacientes no saben
+cuánto falta para su turno y pierden su lugar por ausentarse brevemente. SaludOAX calcula una
+estimación por cita a partir de los signos vitales y el motivo de consulta, y ordena la sala de
+espera por triage clínico en lugar de por orden de llegada.
+
+- **Aplicación:** https://saludoax.me
+- **API:** https://saludoax.me/api
+- **Tablero Kanban:** _(GitHub Projects — pendiente de enlazar)_
+- **Prototipo Figma:** _(pendiente de enlazar)_
 
 ## Integrantes
 
-- Cruz Bautista Mauricio Raciel (Flujo B: Médicos + Estimación IA)
-- Chavez Hernandez Luis Eduardo (Flujo A: Pacientes + Citas)
+| Integrante | Responsabilidad |
+|---|---|
+| Cruz Bautista Mauricio Raciel | Flujo B — Médicos, estimación IA y sala de espera |
+| Chavez Hernandez Luis Eduardo | Flujo A — Pacientes y agendamiento de citas |
 
 ## Tecnologías utilizadas
 
 | Capa | Tecnología |
 |---|---|
-| Backend | Spring Boot 3.3, **Java 21**, Spring Security + JWT |
-| Base de datos | MySQL 8.0, Flyway (migraciones versionadas V1–V9) |
-| Frontend | React 18 (Vite), Axios, React Router, **JavaScript (JSX)** |
-| Diseño | Figma (prototipo navegable) |
-| Pruebas de API | Bruno (colección en `bruno/`) |
-| Despliegue | VPS propio, Nginx, Let's Encrypt (Certbot) |
-| Comunicación | Postfix (correo), Twilio (SMS/WhatsApp) |
-
-## Estado del desarrollo (26 jul 2026)
-
-| Módulo | Estado | Detalles |
-|---|---|---|
-| **Fase 0 — Fundación** | ✅ **LISTO** | Auth JWT (register, login, logout, recuperar, restablecer), roles ADMIN/PACIENTE/MEDICO, BCrypt, Flyway V1–V9, DataSeeder (1 admin, 10 pacientes, 5 médicos, 6 especialidades, 10 citas), React + Axios + AuthContext + interceptor JWT |
-| **Flujo A — Pacientes y Citas** | ✅ **LISTO** | Backend: `PacienteController` (CRUD + paginación server-side + filtro nombre), `CitaController` (CRUD + paginación + cambiar estado + `posicion-fila`), DTOs con Bean Validation (`@PesoValido`, `@PresionSistolicaValida`, `@PresionDiastolicaValida`). Frontend: `RegistroSalud` (crear/editar perfil con validaciones tiempo real), `MisCitas` (listado paginado + modal cancelar), `AgendarCita` (selector médico + datetime-local), rutas protegidas por rol (`/salud`, `/mis-citas`, `/agendar-cita`), `pacienteId` real del usuario autenticado vía `GET /api/pacientes/mi-perfil`. |
-| **Flujo B — Médicos y Estimación IA** | 🔴 **PENDIENTE** | Migración V10 (`estimaciones.justificacion`, `origen`), Entidad `Estimacion`, `IAEstimacionService` (Groq/Gemini + WebClient + fallback determinista), `EstimacionController`, `SalaEsperaController`, `MedicoController`, `EspecialidadController`, `UsuarioController` (ADMIN). Frontend: `AgendaMedico`, `SalaEspera`, `MiEspera`, `AdminMedicos`, `AdminUsuarios`, servicios API, componentes `GravedadBadge`, `Navbar`, `Pagination`. |
-| Comunicación (Postfix/Twilio) | 🔴 Pendiente | Fase 4 |
-| Despliegue VPS + HTTPS | 🔴 Pendiente | Fase 5 |
-| Bruno | 🔴 Pendiente | Fase 6 |
-| Figma | 🟡 En progreso | Fase 1 |
+| Backend | Spring Boot 3.3, Java 21, Maven |
+| Seguridad | Spring Security, JWT (access + blacklist por `jti`), BCrypt |
+| Base de datos | MySQL 8.0 con Flyway (migraciones versionadas V1–V11) |
+| Frontend | React 18, Vite, JavaScript (JSX), Axios, React Router, Tailwind CSS |
+| IA | Groq (Llama 3.3 70B) vía `RestClient`, con fallback determinista |
+| Pruebas de API | Bruno (colección versionada en `backend/bruno/`) |
+| Comunicación | Postfix (correo SMTP), Twilio (SMS y WhatsApp) |
+| Despliegue | VPS propio, Nginx, Let's Encrypt (Certbot), systemd |
 
 ## Estructura del repositorio
 
 ```
 SaludOAX-App-Web/
-├── backend/     → API REST en Spring Boot (Java 21)
-├── frontend/    → Aplicación React + Vite (JSX)
-├── bruno/       → Colección de pruebas de API (Fase 6)
-├── docs/        → Contrato de DTOs (`DTO_CONTRACT.md`)
-└── README.md
+├── backend/
+│   ├── bruno/                    → Colección de pruebas de API
+│   ├── mvnw                      → Maven Wrapper (no requiere Maven instalado)
+│   └── src/main/
+│       ├── java/com/saludoax/backend/   → controller, service, repository, model, dto, security
+│       └── resources/
+│           ├── application.properties.example
+│           ├── application-local.properties
+│           ├── application-prod.properties
+│           └── db/migration/     → Migraciones Flyway V1–V11
+├── frontend/                     → Aplicación React + Vite
+├── db/backup.sql                 → Script de respaldo de la base de datos
+├── docs/DTO_CONTRACT.md          → Contrato de DTOs entre backend y frontend
+├── docker-compose.yml            → MySQL 8 para desarrollo local
+└── .env.example                  → Variables de entorno de docker-compose
 ```
 
 ## Instrucciones de instalación
 
-### Backend
+Requisitos: **Java 21**, **Node.js 18+** y **Docker** (o una instancia propia de MySQL 8).
+
+### 1. Base de datos
 
 ```bash
-cd backend
-cp src/main/resources/application.properties.example src/main/resources/application.properties
-# edita application.properties con tu usuario/password de MySQL y un jwt.secret propio (mín 64 chars)
-mvn spring-boot:run
+cp .env.example .env
+# edita .env con las credenciales que quieras para MySQL
+docker compose up -d
 ```
 
-Requiere una base de datos MySQL creada previamente:
+Esto levanta MySQL 8 en el puerto 3306 y crea la base `saludoax`. Si prefieres usar una
+instalación propia de MySQL, crea la base manualmente:
+
 ```sql
 CREATE DATABASE saludoax;
 ```
 
-Flyway crea el esquema automáticamente al arrancar (migraciones V1–V9). Al iniciar por primera vez, `DataSeeder` carga datos de prueba (pacientes, médicos, citas).
+### 2. Backend
 
-### Frontend
+```bash
+cd backend
+cp src/main/resources/application.properties.example src/main/resources/application.properties
+# edita application.properties: credenciales de MySQL, jwt.secret propio (mín. 64 caracteres)
+# y app.ia.api-key si quieres estimaciones con IA real
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+```
+
+> **El orden importa.** `application.properties` está en `.gitignore` porque contiene credenciales,
+> así que un clon recién descargado no lo incluye. Cópialo desde el `.example` **antes** de compilar.
+> Si generas el JAR sin ese archivo, la compilación termina bien pero la aplicación aborta al arrancar
+> con `Could not resolve placeholder 'jwt.expiration-ms'`: `application-local.properties` solo define
+> el datasource y el secreto JWT, mientras que el resto de las claves viven en el archivo base.
+
+Flyway crea el esquema automáticamente al arrancar (migraciones V1 a V11). En el primer arranque,
+`DataSeeder` carga los datos de prueba: 1 administrador, 10 pacientes, 5 médicos con sus 25 franjas
+de horario de atención, 6 especialidades y 10 citas.
+
+No se necesita tener Maven instalado: `./mvnw` descarga la distribución que declara
+`.mvn/wrapper/maven-wrapper.properties`.
+
+Para generar y ejecutar el JAR de producción (mismo orden: primero el `.properties`, después el `package`):
+
+```bash
+./mvnw clean package -DskipTests
+java -jar target/backend-0.1.0.jar --spring.profiles.active=local
+```
+
+### 3. Frontend
 
 ```bash
 cd frontend
@@ -74,49 +114,166 @@ npm run dev
 
 Frontend en `http://localhost:5173`, backend en `http://localhost:8080/api`.
 
-## Credenciales de prueba (usuario administrador de evaluación)
+### Restaurar la base desde el respaldo
 
-| Rol | Email | Password |
+```bash
+docker exec -i saludoax-mysql mysql -u saludoax -p saludoax < db/backup.sql
+```
+
+## Credenciales de prueba
+
+| Rol | Email | Contraseña |
 |---|---|---|
-| ADMIN | admin@saludoax.com | Admin123! |
-| PACIENTE | paciente1@correo.com | Paciente123! |
-| MEDICO | medico1@saludoax.com | Medico123! |
+| **Administrador (evaluación)** | admin@saludoax.com | `Admin123!` |
+| Paciente | paciente1@correo.com | `Paciente123!` |
+| Médico | medico1@saludoax.com | `Medico123!` |
 
-## Endpoints principales implementados (Fase 0 + Flujo A)
+Los pacientes van de `paciente1@` a `paciente10@correo.com` y los médicos de `medico1@` a
+`medico5@saludoax.com`, todos con la misma contraseña de su rol.
 
-| Módulo | Método | Endpoint | Roles | Descripción |
-|---|---|---|---|---|
-| Auth | POST | `/api/auth/register` | Público | Registro (asigna PACIENTE) |
-| Auth | POST | `/api/auth/login` | Público | Login → devuelve JWT |
-| Auth | POST | `/api/auth/logout` | JWT | Logout + blacklist `jti` |
-| Auth | POST | `/api/auth/recuperar` | Público | Solicita reset (anti-enumeración) |
-| Auth | POST | `/api/auth/restablecer` | Público | Restablece con token |
-| Pacientes | GET | `/api/pacientes` | ADMIN, MEDICO | Listado paginado + `?nombre=` |
-| Pacientes | GET | `/api/pacientes/{id}` | ADMIN, MEDICO, PACIENTE | Detalle |
-| Pacientes | **GET** | **`/api/pacientes/mi-perfil`** | **PACIENTE** | **Perfil del usuario autenticado** |
-| Pacientes | POST | `/api/pacientes` | PACIENTE | Crear perfil (valida vitales) |
-| Pacientes | PUT | `/api/pacientes/{id}` | ADMIN, PACIENTE | Actualizar perfil |
-| Pacientes | DELETE | `/api/pacientes/{id}` | ADMIN | Eliminar |
-| Citas | GET | `/api/citas` | ADMIN, MEDICO | Listado paginado + `?estado=` |
-| Citas | GET | `/api/citas/paciente/{pacienteId}` | ADMIN, PACIENTE | Citas de un paciente (paginado) |
-| Citas | GET | `/api/citas/medico/{medicoId}` | ADMIN, MEDICO | Citas de un médico (paginado) |
-| Citas | GET | `/api/citas/{id}` | ADMIN, MEDICO, PACIENTE | Detalle |
-| Citas | POST | `/api/citas` | PACIENTE, ADMIN | Crear cita (fecha futura, vitales) |
-| Citas | PATCH | `/api/citas/{id}/estado` | ADMIN, MEDICO, PACIENTE | Cambiar estado |
-| Citas | GET | `/api/citas/{id}/posicion-fila` | ADMIN, MEDICO, PACIENTE | Posición en cola del médico |
-| Médicos | GET | `/api/medicos` | Autenticado | Listado (para selector en AgendarCita) |
+Las contraseñas se almacenan con BCrypt y deben cumplir: mínimo 8 caracteres, una mayúscula,
+un número y un carácter especial. La regla se valida en el frontend (bajo cada input) y en el
+backend con Bean Validation.
 
-## Diagrama Entidad-Relación
+## Roles y niveles de acceso
+
+| Rol | Alcance |
+|---|---|
+| **ADMIN** | Acceso total. Gestiona usuarios y médicos (alta, edición, baja lógica), consulta todas las citas y salas de espera |
+| **MEDICO** | Su agenda, su sala de espera ordenada por triage, y la generación de estimaciones de sus citas |
+| **PACIENTE** | Solo sus propios datos: perfil de salud, sus citas, y su posición en la sala de espera |
+
+La autorización se aplica con `@PreAuthorize` por endpoint y con rutas protegidas por rol en React.
+
+## API
+
+URL base: `http://localhost:8080/api` (local) · `https://saludoax.me/api` (producción)
+
+Todos los endpoints excepto los de autenticación requieren la cabecera `Authorization: Bearer <token>`.
+Los listados usan paginación del lado del servidor mediante los parámetros `page`, `size` y `sort`.
+
+### Autenticación
+
+| Método | Endpoint | Acceso | Descripción |
+|---|---|---|---|
+| POST | `/auth/register` | Público | Registro de paciente |
+| POST | `/auth/login` | Público | Devuelve el JWT |
+| POST | `/auth/logout` | Autenticado | Invalida el token vía blacklist de `jti` |
+| POST | `/auth/recuperar` | Público | Solicita restablecer contraseña (respuesta anti-enumeración) |
+| POST | `/auth/restablecer` | Público | Restablece la contraseña con el token recibido |
+
+### Pacientes
+
+| Método | Endpoint | Acceso | Descripción |
+|---|---|---|---|
+| GET | `/pacientes` | ADMIN, MEDICO | Listado paginado, filtro `?nombre=` |
+| GET | `/pacientes/{id}` | ADMIN, MEDICO, PACIENTE | Detalle |
+| GET | `/pacientes/mi-perfil` | PACIENTE | Perfil del usuario autenticado |
+| GET | `/pacientes/mi-turno` | PACIENTE | Su posición y espera estimada en la sala |
+| GET | `/pacientes/ultimos-vitales` | PACIENTE | Últimos signos vitales registrados |
+| POST | `/pacientes` | PACIENTE | Crea su perfil de salud |
+| PUT | `/pacientes/{id}` | ADMIN, PACIENTE | Actualiza el perfil |
+| DELETE | `/pacientes/{id}` | ADMIN | Elimina el perfil |
+
+### Citas, estimación IA y sala de espera
+
+| Método | Endpoint | Acceso | Descripción |
+|---|---|---|---|
+| GET | `/citas` | ADMIN, MEDICO | Listado paginado, filtro `?estado=` |
+| GET | `/citas/paciente/{pacienteId}` | ADMIN, PACIENTE | Citas de un paciente |
+| GET | `/citas/medico/{medicoId}` | ADMIN, MEDICO | Citas de un médico |
+| GET | `/citas/{id}` | ADMIN, MEDICO, PACIENTE | Detalle |
+| POST | `/citas` | PACIENTE, ADMIN | Agenda una cita dentro del horario del médico |
+| PATCH | `/citas/{id}/estado` | ADMIN, MEDICO, PACIENTE | Cambia el estado de la cita |
+| GET | `/citas/{id}/posicion-fila` | ADMIN, MEDICO, PACIENTE | Posición en la fila del médico |
+| POST | `/citas/{id}/estimar` | ADMIN, MEDICO | Genera la estimación de gravedad y duración |
+| GET | `/citas/{id}/estimacion` | ADMIN, MEDICO, PACIENTE | Consulta la estimación |
+| POST | `/citas/{id}/turno/iniciar` | ADMIN, MEDICO | Marca el turno como en consulta |
+| POST | `/citas/{id}/turno/finalizar` | ADMIN, MEDICO | Cierra el turno |
+
+### Médicos y especialidades
+
+| Método | Endpoint | Acceso | Descripción |
+|---|---|---|---|
+| GET | `/medicos` | ADMIN, MEDICO, PACIENTE | Listado paginado, filtros `?busqueda=` y `?especialidadId=` |
+| GET | `/medicos/{id}` | ADMIN, MEDICO, PACIENTE | Detalle con especialidades y horarios |
+| GET | `/medicos/mi-perfil` | MEDICO | Perfil del médico autenticado |
+| GET | `/medicos/{id}/sala-espera` | ADMIN, MEDICO | Sala de espera ordenada por triage |
+| GET | `/especialidades` | Autenticado | Catálogo de especialidades |
+
+### Administración
+
+| Método | Endpoint | Acceso | Descripción |
+|---|---|---|---|
+| GET | `/admin/usuarios` | ADMIN | Listado paginado, filtros `?busqueda=`, `?rol=`, `?activo=` |
+| POST | `/admin/usuarios` | ADMIN | Alta de usuario con su perfil, en una sola transacción |
+| PUT | `/admin/usuarios/{id}` | ADMIN | Edición |
+| PATCH | `/admin/usuarios/{id}/desactivar` | ADMIN | Baja lógica |
+| PATCH | `/admin/usuarios/{id}/reactivar` | ADMIN | Reactivación |
+| GET | `/admin/medicos` | ADMIN | Listado paginado, filtros `?busqueda=` y `?especialidad=` |
+| POST | `/admin/medicos` | ADMIN | Alta con especialidades y horarios de atención |
+| PUT | `/admin/medicos/{id}` | ADMIN | Edición |
+| PATCH | `/admin/medicos/{id}/desactivar` | ADMIN | Baja lógica |
+| PATCH | `/admin/medicos/{id}/reactivar` | ADMIN | Reactivación |
+
+Las bajas son siempre lógicas (`activo = false`), nunca borrado físico: eliminar un usuario
+rompería las claves foráneas de las citas ya registradas. El administrador no puede desactivarse
+a sí mismo.
+
+### Manejo de errores
+
+Las respuestas de error son JSON uniforme producido por un `@ControllerAdvice` global:
+
+```json
+{
+  "mensaje": "Error de validacion",
+  "error": "Unprocessable Entity",
+  "timestamp": "2026-07-28T19:45:29.993",
+  "status": 422,
+  "detalle": { "password": "La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un carácter especial" }
+}
+```
+
+Códigos utilizados: `400` petición inválida, `401` credenciales o token inválidos, `403` rol sin
+permiso, `404` recurso inexistente, `422` fallo de Bean Validation, `500` error interno.
+
+## Estimación de gravedad con IA
+
+`POST /api/citas/{id}/estimar` construye un prompt con la edad derivada del paciente, sus signos
+vitales, sus antecedentes de salud y el motivo de la consulta, y lo envía a Groq. La respuesta
+devuelve el nivel de gravedad (`LEVE`, `MODERADA`, `URGENTE`) y la duración estimada en minutos.
+
+El módulo tiene dos redes de seguridad:
+
+- **Validación clínica.** La respuesta de la IA se contrasta contra un cálculo determinista basado
+  en umbrales de presión arterial y edad de riesgo. Si la IA subestima la gravedad, su resultado se
+  descarta y se aplica el determinista.
+- **Fallback.** Si la IA no responde dentro del presupuesto de 8 segundos, devuelve un error HTTP o
+  una respuesta no interpretable, la estimación se calcula por completo con el criterio determinista.
+  El servicio nunca queda sin respuesta.
+
+La sala de espera se ordena por gravedad y, a igualdad de gravedad, por hora de llegada. La posición
+y el tiempo de espera acumulado se calculan en la base de datos con funciones de ventana
+(`ROW_NUMBER()` y `SUM() OVER`), en una sola consulta independiente del número de pacientes en cola.
+
+## Base de datos
+
+### Diagrama Entidad-Relación
 
 ```mermaid
 erDiagram
-  ROLES ||--o{ USUARIOS : tiene
-  USUARIOS ||--o| PACIENTES : es
-  USUARIOS ||--o| MEDICOS : es
+  ROLES ||--o{ USUARIOS : clasifica
+  USUARIOS ||--o| PACIENTES : "perfil de"
+  USUARIOS ||--o| MEDICOS : "perfil de"
+  USUARIOS ||--o{ TOKEN_BLACKLIST : invalida
+  USUARIOS ||--o{ PASSWORD_RESET_TOKEN : solicita
+  MEDICOS ||--o{ HORARIOS_MEDICO : atiende_en
   MEDICOS ||--o{ CITAS : atiende
   PACIENTES ||--o{ CITAS : agenda
   CITAS ||--o| ESTIMACIONES : genera
-  MEDICOS }o--o{ ESPECIALIDADES : tiene
+  CITAS ||--o| TURNOS_SALA_ESPERA : ocupa
+  MEDICOS ||--o{ MEDICO_ESPECIALIDADES : posee
+  ESPECIALIDADES ||--o{ MEDICO_ESPECIALIDADES : agrupa
 
   ROLES {
     bigint id PK
@@ -125,11 +282,12 @@ erDiagram
   USUARIOS {
     bigint id PK
     varchar email UK
+    varchar nombre
     varchar password_hash
+    datetime password_changed_at
     bigint rol_id FK
     boolean activo
     datetime creado_en
-    datetime password_changed_at
   }
   PACIENTES {
     bigint id PK
@@ -149,6 +307,8 @@ erDiagram
     bigint usuario_id UK,FK
     varchar nombre
     varchar especialidad
+    varchar cedula
+    varchar consultorio
     boolean disponible
     datetime creado_en
   }
@@ -159,6 +319,13 @@ erDiagram
   MEDICO_ESPECIALIDADES {
     bigint medico_id PK,FK
     bigint especialidad_id PK,FK
+  }
+  HORARIOS_MEDICO {
+    bigint id PK
+    bigint medico_id FK
+    varchar dia_semana
+    time hora_inicio
+    time hora_fin
   }
   CITAS {
     bigint id PK
@@ -177,9 +344,13 @@ erDiagram
     bigint cita_id UK,FK
     int tiempo_estimado_min
     varchar gravedad
-    text justificacion
-    varchar origen
     datetime creado_en
+  }
+  TURNOS_SALA_ESPERA {
+    bigint id PK
+    bigint cita_id UK,FK
+    varchar estado
+    datetime hora_llegada
   }
   TOKEN_BLACKLIST {
     bigint id PK
@@ -198,28 +369,29 @@ erDiagram
   }
 ```
 
-Relación N:M: `medicos` — `especialidades`, a través de la tabla intermedia
-`medico_especialidades` (un médico puede tener varias especialidades, una
-especialidad puede ser cubierta por varios médicos). Cumple el requisito
-mínimo de la rúbrica.
+### Normalización
 
-Contrato completo de campos entre backend y frontend: ver
-[`docs/DTO_CONTRACT.md`](docs/DTO_CONTRACT.md).
+El esquema está en **BCNF**: en cada tabla, todo determinante es superclave. Los atributos
+multivaluados se resolvieron con tablas propias en lugar de columnas repetidas o campos de texto
+con separadores, por lo que la **4FN** se cumple por construcción.
 
-## URL base de la API
+**Relación N:M:** `medicos` — `especialidades` a través de `medico_especialidades`. Un médico puede
+tener varias especialidades y una especialidad puede ser cubierta por varios médicos. La tabla
+intermedia tiene clave primaria compuesta y ningún atributo propio.
 
-- Local: `http://localhost:8080/api`
-- Producción: `https://<tudominio>/api` (pendiente despliegue)
+Los enumerados (`estado`, `gravedad`, `sexo`) se modelaron como `VARCHAR` con restricción `CHECK`
+en vez del tipo `ENUM` nativo de MySQL, porque `ENUM` provoca discrepancias con Hibernate al
+ejecutar `ddl-auto=validate`.
 
-## Próximos pasos (checklist Flujo A — Luis)
+Contrato completo de campos entre backend y frontend: [`docs/DTO_CONTRACT.md`](docs/DTO_CONTRACT.md).
 
-- [x] Endpoint `GET /api/pacientes/mi-perfil`
-- [x] Rutas protegidas en `App.jsx` (`/salud`, `/mis-citas`, `/agendar-cita`)
-- [x] `AgendarCita.jsx` (selector médico + datetime-local)
-- [x] `MisCitas.jsx` usa `pacienteId` real del usuario autenticado
-- [x] `RegistroSalud.jsx` modo crear/editar (carga perfil si existe)
-- [ ] Loading states en `AgendarCita` y cancelar en `MisCitas` (parcial)
-- [ ] Filtro por nombre en UI de listado pacientes (backend ya lo soporta)
-- [ ] Validación solape citas mismo médico/hora (opcional)
-- [ ] Casos Bruno: crear paciente, listar paginado, crear cita, cancelar cita
+## Pruebas de API con Bruno
 
+La colección está versionada en [`backend/bruno/`](backend/bruno). Ábrela con Bruno y selecciona
+el entorno `Local`.
+
+Incluye el flujo de autenticación de los tres roles (el token JWT se guarda automáticamente en una
+variable y se reutiliza en las peticiones protegidas), las operaciones de médicos, citas, estimación
+y sala de espera, y una carpeta `Errores/` con casos de fallo deliberado: `400` recurso inválido,
+`401` credenciales incorrectas, `403` rol sin permiso, `404` ruta inexistente y `422` fallo de
+Bean Validation.

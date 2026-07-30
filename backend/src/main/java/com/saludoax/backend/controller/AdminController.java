@@ -77,7 +77,7 @@ public class AdminController {
 
     @PutMapping("/medicos/{id}")
     public ResponseEntity<MedicoAdminDTO> actualizarMedico(@PathVariable Long id,
-                                                            @Valid @RequestBody CrearMedicoRequest request) {
+                                                            @Valid @RequestBody ActualizarMedicoRequest request) {
         MedicoAdminDTO actualizado = adminService.actualizarMedico(id, request);
         return ResponseEntity.ok(actualizado);
     }

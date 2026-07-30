@@ -196,7 +196,7 @@ public class AdminService {
     }
 
     @Transactional
-    public MedicoAdminDTO actualizarMedico(Long id, CrearMedicoRequest request) {
+    public MedicoAdminDTO actualizarMedico(Long id, ActualizarMedicoRequest request) {
         Medico medico = medicoRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Médico no encontrado"));
 

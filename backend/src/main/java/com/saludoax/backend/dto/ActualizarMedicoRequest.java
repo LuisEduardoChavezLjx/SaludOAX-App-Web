@@ -3,7 +3,7 @@ package com.saludoax.backend.dto;
 import jakarta.validation.constraints.*;
 import java.util.List;
 
-public class CrearMedicoRequest {
+public class ActualizarMedicoRequest {
 
     @NotBlank(message = "El nombre es obligatorio")
     private String nombre;
@@ -12,7 +12,6 @@ public class CrearMedicoRequest {
     @Email
     private String email;
 
-    @NotBlank(message = "La contraseña inicial es obligatoria")
     @Pattern(regexp = "^(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}$",
              message = "La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un carácter especial")
     private String password;
@@ -33,7 +32,10 @@ public class CrearMedicoRequest {
     public void setEmail(String email) { this.email = email; }
 
     public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+
+    public void setPassword(String password) {
+        this.password = password == null || password.isBlank() ? null : password;
+    }
 
     public String getCedula() { return cedula; }
     public void setCedula(String cedula) { this.cedula = cedula; }
