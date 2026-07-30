@@ -1,6 +1,6 @@
 import { CircleCheck } from 'lucide-react'
 
-export default function EmptyState({ icon: Icon = CircleCheck, title, description }) {
+export default function EmptyState({ icon: Icon = CircleCheck, title, description, children }) {
     return (
         <div className="rounded-xl border border-line bg-white px-6 py-12">
             <div className="max-w-[46ch] mx-auto text-center">
@@ -11,6 +11,7 @@ export default function EmptyState({ icon: Icon = CircleCheck, title, descriptio
                 {description && (
                     <p className="mt-2 text-sm text-muted leading-6">{description}</p>
                 )}
+                {children && <div className="mt-5">{children}</div>}
             </div>
         </div>
     )

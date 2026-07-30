@@ -9,6 +9,7 @@ import { Search, Zap, LoaderCircle } from 'lucide-react'
 import { listarCitasPorMedico } from '../api/citaService'
 import { estimarCita } from '../api/estimacionService'
 import { obtenerMiPerfil } from '../api/medicoService'
+import { fechaLocalISO, formatoFechaLarga } from '../utilidades/fechas'
 
 export default function AgendaMedico() {
   const [citas, setCitas] = useState(null)
@@ -17,7 +18,7 @@ export default function AgendaMedico() {
   const [seleccionada, setSeleccionada] = useState(null)
   const [buscador, setBuscador] = useState('')
   const [filtroEstado, setFiltroEstado] = useState('TODOS')
-  const [filtroFecha, setFiltroFecha] = useState(new Date().toISOString().split('T')[0])
+  const [filtroFecha, setFiltroFecha] = useState(fechaLocalISO())
   const [page, setPage] = useState(0)
   const [estimando, setEstimando] = useState(false)
   const [estimacionResult, setEstimacionResult] = useState(null)
@@ -71,6 +72,7 @@ export default function AgendaMedico() {
   if (loading) return <Layout title="Agenda del día"><LoadingSpinner /></Layout>
   if (error) return <Layout title="Agenda del día"><EmptyState title="Error" description={error} /></Layout>
 
+  const hayCitasEnOtraFecha = !!filtroFecha && (citas?.contenido?.length ?? 0) > 0
   const citasFiltradas = (citas?.contenido || []).filter((cita) => {
     const coincideNombre = cita.pacienteNombre.toLowerCase().includes(buscador.toLowerCase())
     const coincideEstado = filtroEstado === 'TODOS' || cita.estado === filtroEstado
@@ -112,7 +114,21 @@ export default function AgendaMedico() {
             </div>
 
             {citasFiltradas.length === 0 ? (
-                <EmptyState title="Sin citas" description="No hay citas que coincidan con los filtros." />
+                <EmptyState
+                    title={filtroFecha ? `Sin citas el ${formatoFechaLarga(filtroFecha)}` : 'Sin citas'}
+                    description={
+                      hayCitasEnOtraFecha
+                          ? `Tienes ${citas.contenido.length} cita(s) agendada(s) en otras fechas.`
+                          : 'No hay citas que coincidan con los filtros.'
+                    }
+                >
+                  {hayCitasEnOtraFecha && (
+                      <button type="button" onClick={() => setFiltroFecha('')}
+                              className="text-sm font-semibold text-brand-700 hover:text-brand-800 underline underline-offset-4">
+                        Ver todas las fechas
+                      </button>
+                  )}
+                </EmptyState>
             ) : (
                 <>
                   <div className="overflow-x-auto">

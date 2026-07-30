@@ -12,6 +12,8 @@ import java.util.Optional;
 public interface MedicoRepository extends JpaRepository<Medico, Long> {
     Optional<Medico> findByUsuarioId(Long usuarioId);
 
+    boolean existsByIdAndUsuarioEmail(Long id, String email);
+
     @Query("SELECT m FROM Medico m WHERE " +
            "(:busqueda IS NULL OR m.nombre LIKE %:busqueda% OR m.cedula LIKE %:busqueda%) AND " +
            "(:especialidadId IS NULL OR EXISTS (SELECT 1 FROM m.especialidades e WHERE e.id = :especialidadId))")
