@@ -10,8 +10,8 @@ espera por triage clínico en lugar de por orden de llegada.
 
 - **Aplicación:** https://saludoax.me
 - **API:** https://saludoax.me/api
-- **Tablero Kanban:** _(GitHub Projects — pendiente de enlazar)_
-- **Prototipo Figma:** _(pendiente de enlazar)_
+- **Tablero Kanban:** https://github.com/users/LuisEduardoChavezLjx/projects/2
+- **Prototipo Figma:** https://www.figma.com/design/ccBobNVwGxbSMLKxC851Dj/Prototipo_SaludOax?node-id=0-1&t=L6TcQcoGXb4pkO4B-1
 
 ## Integrantes
 
