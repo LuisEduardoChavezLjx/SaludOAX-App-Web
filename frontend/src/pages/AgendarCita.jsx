@@ -110,7 +110,9 @@ export default function AgendarCita() {
       setSuccess(true)
       setForm({ medicoId: '', fecha: '', hora: '' })
     } catch (err) {
-      setServerError(err.response?.data?.mensaje || 'No se pudo agendar la cita.')
+      const datos = err.response?.data
+      const porCampo = datos?.detalle ? Object.values(datos.detalle).join(' ') : ''
+      setServerError(porCampo || datos?.mensaje || 'No se pudo agendar la cita.')
     } finally {
       setSubmitting(false)
     }
@@ -134,7 +136,7 @@ export default function AgendarCita() {
             </div>
           )}
 
-          {serverError && !form.medicoId && !form.fecha && loading === false && (
+          {serverError && !loading && (
             <div className="mb-6 flex items-center gap-3 rounded-xl border border-urgente/30 bg-urgente/5 px-4 py-3 text-sm text-urgente">
               <AlertCircle className="w-5 h-5 shrink-0" />
               {serverError}
@@ -148,7 +150,7 @@ export default function AgendarCita() {
             </div>
           )}
 
-          {!loading && !serverError && (
+          {!loading && (
             <form onSubmit={handleSubmit} noValidate className="space-y-6">
               <div>
                 <label htmlFor="medicoId" className="label">Médico</label>
