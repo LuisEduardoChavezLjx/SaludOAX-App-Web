@@ -98,6 +98,12 @@ public class PacienteService {
         paciente.setContextoSalud(dto.getContextoSalud());
     }
 
+    @Transactional(readOnly = true)
+    public boolean esPropietario(Long pacienteId, String email) {
+        return pacienteId != null && email != null
+                && pacienteRepository.existsByIdAndUsuarioEmail(pacienteId, email);
+    }
+
     public PacienteDTO buscarPorUsuarioId(Long usuarioId) {
         Paciente paciente = pacienteRepository.findByUsuarioId(usuarioId)
                 .orElseThrow(() -> new IllegalArgumentException("Perfil de paciente no encontrado"));

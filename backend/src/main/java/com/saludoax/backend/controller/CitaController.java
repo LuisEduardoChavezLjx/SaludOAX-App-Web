@@ -40,65 +40,66 @@ public class CitaController {
     }
 
     @GetMapping("/paciente/{pacienteId}")
-    @PreAuthorize("hasAnyRole('ADMIN','PACIENTE')")
+    @PreAuthorize("hasRole('ADMIN') or @pacienteService.esPropietario(#pacienteId, authentication.name)")
     public ResponseEntity<PageResponse<CitaDTO>> listarPorPaciente(
             @PathVariable Long pacienteId, Pageable pageable) {
         return ResponseEntity.ok(new PageResponse<>(citaService.listarPorPaciente(pacienteId, pageable)));
     }
 
     @GetMapping("/medico/{medicoId}")
-    @PreAuthorize("hasAnyRole('ADMIN','MEDICO')")
+    @PreAuthorize("hasRole('ADMIN') or @medicoService.esPropietario(#medicoId, authentication.name)")
     public ResponseEntity<PageResponse<CitaDTO>> listarPorMedico(
             @PathVariable Long medicoId, Pageable pageable) {
         return ResponseEntity.ok(new PageResponse<>(citaService.listarPorMedico(medicoId, pageable)));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','MEDICO','PACIENTE')")
+    @PreAuthorize("hasRole('ADMIN') or @citaService.esParticipante(#id, authentication.name)")
     public ResponseEntity<CitaDTO> obtener(@PathVariable Long id) {
         return ResponseEntity.ok(citaService.obtener(id));
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('PACIENTE','ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('PACIENTE') and (#dto.pacienteId == null "
+            + "or @pacienteService.esPropietario(#dto.pacienteId, authentication.name)))")
     public ResponseEntity<CitaDTO> crear(@Valid @RequestBody CitaDTO dto, Authentication authentication) {
         return ResponseEntity.status(HttpStatus.CREATED).body(citaService.crear(dto, authentication.getName()));
     }
 
     @PatchMapping("/{id}/estado")
-    @PreAuthorize("hasAnyRole('ADMIN','MEDICO','PACIENTE')")
+    @PreAuthorize("hasRole('ADMIN') or @citaService.esParticipante(#id, authentication.name)")
     public ResponseEntity<CitaDTO> cambiarEstado(@PathVariable Long id, @RequestBody Map<String, String> body) {
         return ResponseEntity.ok(citaService.cambiarEstado(id, body.get("estado")));
     }
 
     // Consumido por el Flujo B para mostrar tiempo estimado de espera
     @GetMapping("/{id}/posicion-fila")
-    @PreAuthorize("hasAnyRole('ADMIN','MEDICO','PACIENTE')")
+    @PreAuthorize("hasRole('ADMIN') or @citaService.esParticipante(#id, authentication.name)")
     public ResponseEntity<Map<String, Integer>> posicionEnFila(@PathVariable Long id) {
         return ResponseEntity.ok(Map.of("posicion", citaService.posicionEnFila(id)));
     }
 
     @PostMapping("/{id}/estimar")
-    @PreAuthorize("hasAnyRole('ADMIN','MEDICO')")
+    @PreAuthorize("hasRole('ADMIN') or @citaService.esMedicoDeLaCita(#id, authentication.name)")
     public ResponseEntity<EstimacionDTO> estimar(@PathVariable Long id) {
         return ResponseEntity.ok(estimacionService.estimar(id));
     }
 
     @GetMapping("/{id}/estimacion")
-    @PreAuthorize("hasAnyRole('ADMIN','MEDICO','PACIENTE')")
+    @PreAuthorize("hasRole('ADMIN') or @citaService.esParticipante(#id, authentication.name)")
     public ResponseEntity<EstimacionDTO> obtenerEstimacion(@PathVariable Long id) {
         return ResponseEntity.ok(estimacionService.obtenerPorCita(id));
     }
 
     @PostMapping("/{id}/turno/iniciar")
-    @PreAuthorize("hasAnyRole('ADMIN','MEDICO')")
+    @PreAuthorize("hasRole('ADMIN') or @citaService.esMedicoDeLaCita(#id, authentication.name)")
     public ResponseEntity<Void> iniciarTurno(@PathVariable Long id) {
         salaEsperaService.iniciar(id);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/turno/finalizar")
-    @PreAuthorize("hasAnyRole('ADMIN','MEDICO')")
+    @PreAuthorize("hasRole('ADMIN') or @citaService.esMedicoDeLaCita(#id, authentication.name)")
     public ResponseEntity<Void> finalizarTurno(@PathVariable Long id) {
         salaEsperaService.finalizar(id);
         return ResponseEntity.ok().build();

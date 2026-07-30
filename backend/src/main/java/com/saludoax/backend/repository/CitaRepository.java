@@ -25,6 +25,10 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
            "AND c.fechaHora < :fechaHora ORDER BY c.fechaHora ASC")
     List<Cita> findCitasAntesEnFila(@Param("medicoId") Long medicoId, @Param("fechaHora") LocalDateTime fechaHora);
 
+    boolean existsByIdAndPacienteUsuarioEmail(Long id, String email);
+
+    boolean existsByIdAndMedicoUsuarioEmail(Long id, String email);
+
     Optional<Cita> findFirstByPacienteIdAndEstadoInOrderByFechaHoraDesc(Long pacienteId, List<EstadoCita> estados);
 
     Optional<Cita> findFirstByPacienteIdAndEstadoInOrderByFechaHoraAsc(Long pacienteId, List<EstadoCita> estados);

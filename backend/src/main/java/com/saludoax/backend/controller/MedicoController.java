@@ -53,7 +53,7 @@ public class MedicoController {
     }
 
     @GetMapping("/{id}/sala-espera")
-    @PreAuthorize("hasAnyRole('ADMIN','MEDICO')")
+    @PreAuthorize("hasRole('ADMIN') or @medicoService.esPropietario(#id, authentication.name)")
     public ResponseEntity<List<TurnoSalaEsperaDTO>> salaEspera(@PathVariable Long id) {
         return ResponseEntity.ok(salaEsperaService.listarPorMedico(id));
     }

@@ -97,6 +97,17 @@ public class CitaService {
         return anteriores.size();
     }
 
+    public boolean esParticipante(Long citaId, String email) {
+        if (citaId == null || email == null) return false;
+        return citaRepository.existsByIdAndPacienteUsuarioEmail(citaId, email)
+                || citaRepository.existsByIdAndMedicoUsuarioEmail(citaId, email);
+    }
+
+    public boolean esMedicoDeLaCita(Long citaId, String email) {
+        if (citaId == null || email == null) return false;
+        return citaRepository.existsByIdAndMedicoUsuarioEmail(citaId, email);
+    }
+
     private Cita buscarOFallar(Long id) {
         return citaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Cita no encontrada"));

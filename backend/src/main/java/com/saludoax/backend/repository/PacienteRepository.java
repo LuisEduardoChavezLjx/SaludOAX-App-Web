@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface PacienteRepository extends JpaRepository<Paciente, Long> {
     Optional<Paciente> findByUsuarioId(Long usuarioId);
     Page<Paciente> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
+    boolean existsByIdAndUsuarioEmail(Long id, String email);
 }

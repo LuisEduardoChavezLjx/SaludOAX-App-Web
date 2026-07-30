@@ -34,6 +34,11 @@ public class MedicoService {
                 .orElseThrow(() -> new IllegalArgumentException("Perfil de medico no encontrado"));
     }
 
+    public boolean esPropietario(Long medicoId, String email) {
+        return medicoId != null && email != null
+                && medicoRepository.existsByIdAndUsuarioEmail(medicoId, email);
+    }
+
     private Medico buscarOFallar(Long id) {
         return medicoRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Medico no encontrado"));

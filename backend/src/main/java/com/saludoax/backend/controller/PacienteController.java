@@ -38,7 +38,7 @@ public class PacienteController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','MEDICO','PACIENTE')")
+    @PreAuthorize("hasAnyRole('ADMIN','MEDICO') or @pacienteService.esPropietario(#id, authentication.name)")
     public ResponseEntity<PacienteDTO> obtener(@PathVariable Long id) {
         return ResponseEntity.ok(pacienteService.obtener(id));
     }
@@ -75,7 +75,7 @@ public class PacienteController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','PACIENTE')")
+    @PreAuthorize("hasRole('ADMIN') or @pacienteService.esPropietario(#id, authentication.name)")
     public ResponseEntity<PacienteDTO> actualizar(@PathVariable Long id, @Valid @RequestBody PacienteDTO dto) {
         return ResponseEntity.ok(pacienteService.actualizar(id, dto));
     }
