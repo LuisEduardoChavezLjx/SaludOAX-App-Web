@@ -8,6 +8,7 @@ User=raciel-azure
 WorkingDirectory=/home/raciel-azure/saludoax/app
 EnvironmentFile=/home/raciel-azure/saludoax/app/app.env
 Environment=SPRING_PROFILES_ACTIVE=prod
+Environment=TZ=America/Mexico_City
 ExecStart=/usr/bin/java -jar /home/raciel-azure/saludoax/app/backend.jar
 SuccessExitStatus=143
 Restart=on-failure
