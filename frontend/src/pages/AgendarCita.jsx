@@ -6,6 +6,7 @@ import { obtenerMiPerfil } from '../api/pacienteService'
 import Layout from '../components/Layout'
 import { useNavigate } from 'react-router-dom'
 import { CalendarPlus, Stethoscope, Calendar, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react'
+import { fechaLocalISO } from '../utilidades/fechas'
 
 const DIAS_SEMANA = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO']
 const DURACION_SLOT_MIN = 30
@@ -13,7 +14,7 @@ const DURACION_SLOT_MIN = 30
 function generarSlots(horarios, diaSemana, fecha) {
   const delDia = horarios.filter((h) => h.diaSemana === diaSemana)
   const ahora = new Date()
-  const esHoy = fecha === ahora.toISOString().slice(0, 10)
+  const esHoy = fecha === fechaLocalISO(ahora)
   const slots = []
 
   for (const h of delDia) {
@@ -182,7 +183,7 @@ export default function AgendarCita() {
                     id="fecha"
                     name="fecha"
                     type="date"
-                    min={new Date().toISOString().slice(0, 10)}
+                    min={fechaLocalISO()}
                     value={form.fecha}
                     onChange={handleChange}
                     disabled={!form.medicoId}

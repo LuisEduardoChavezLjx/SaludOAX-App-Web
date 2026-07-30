@@ -33,7 +33,7 @@ export function SidebarAdmin() {
 
       <div className="p-3 border-t border-white/10">
         <p className="px-3 py-2 text-xs text-white/50 leading-4">
-          Centro de Salud Comunitario<br />Oaxaca de Juárez
+          Instituto Tecnologico de Oaxaca<br />Oaxaca de Juárez
         </p>
       </div>
     </aside>
